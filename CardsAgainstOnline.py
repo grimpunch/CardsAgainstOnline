@@ -1,3 +1,4 @@
+from CardsAgainstHumanity import GameHandler
 from Server import Room
 import json
 import uuid
@@ -49,12 +50,13 @@ def generate_client_list_message(clients_by_name_list=None):
 
 clients = {}
 rooms = []
-
+static_path = os.path.join(os.path.dirname(__file__), "static")
 handlers = [(r'/chat', WebSocketChatHandler), (r'/', MainHandler)]
 settings = dict(
-    static_path=os.path.join(os.path.dirname(__file__), "static"),
+    static_path=static_path,
     debug=True,
     )
+game = GameHandler.Game()
 app = tornado.web.Application(handlers, **settings)
 app.listen(8888)
 tornado.ioloop.IOLoop.instance().start()

@@ -1,6 +1,6 @@
 import json
 import os
-dir = os.path.dirname(__file__)
+dir = os.path.realpath(__file__).replace('/CardsAgainstHumanity/card_data.py', '')
 cardsjsonfile = os.path.join(dir, 'static/cards.json')
 
 class CardParser(object):

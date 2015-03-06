@@ -80,7 +80,8 @@ class Game():
     def add_player(self, player_name=None):
         player = CAHPlayer(name=player_name)
         self.cards.draw_hand(player)
-        print('%s, has entered the game' % player)
+        print('%s, has entered the game' % player.name)
+        self.players.append(player)
         return
 
     def remove_player(self, player_name=None):
@@ -97,7 +98,7 @@ class Game():
         Return player from game's player list via player's name.
         :type players: CAHPlayer
         """
-        return [player for player in self.players if player_name in player.name]
+        return [player for player in self.players if player_name in player.name][0]
 
     def new_game(self):
         """
