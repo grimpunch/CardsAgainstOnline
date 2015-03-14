@@ -1,63 +1,70 @@
+import pymongo
+from tornado import options
 from CardsAgainstHumanity import GameHandler
 from Server import Room
 import json
 import uuid
 import os
-
+import bcrypt
+import hashlib
+import urllib
+import base64
 import tornado.ioloop
+import tornado.options
 import tornado.web
+from tornado.options import define, options
+import tornado.httpserver
+from tornado.web import url
 import tornado.websocket
 import tornado.util
 import tornado.template
 
+from handlers.handlers import *
 
-class MainHandler(tornado.web.RequestHandler):
-    @tornado.web.asynchronous
-    def get(request):
-        request.render("index.html")
+define("port", default=8888, type=int)
+# define("config_file", default="app_config.yml", help="app_config file")
 
-class WebSocketChatHandler(tornado.websocket.WebSocketHandler):
-    def open(self, *args):
-        print("open", "WebSocketChatHandler")
-        self.id = uuid.uuid4()
-        clients[self.id] = self
-        print('New Connection')
+MONGO_SERVER = 'localhost'
 
-    def on_message(self, message):
-        print(message)
-        message_json = json.loads(message)
+class Application(tornado.web.Application):
 
-        if message_json.get('room'):
-            if message_json['room'] not in rooms:
-                rooms.append({str(message_json['room']): Room(room_name=str(message_json['room']))})
+    def __init__(self):
+        handlers = [
+        url(r'/', HelloHandler, name='index'),
+        url(r'/hello', HelloHandler, name='hello'),
+        url(r'/email', EmailMeHandler, name='email'),
+        url(r'/message', MessageHandler, name='message'),
+        url(r'/menu', MenuTagsHandler, name='menu'),
+        url(r'/slidy', SlidyHandler, name='slidy'),
+        url(r'/notification', NotificationHandler, name='notification'),
+        url(r'/thread', ThreadHandler, name='thread_handler'),
+        url(r'/login_no_block', NoneBlockingLogin, name='login_no_block'),
+        url(r'/login', LoginHandler, name='login'),
+        url(r'/register', RegisterHandler, name='register'),
+        url(r'/logout', LogoutHandler, name='logout'),
+        # url(r'/chat', WebSocketChatHandler, name='wbchat'),
+        # url(r'/play', GameScreenHandler, name='game')
+        ]
 
-        for client in clients.values():
-            client.get(self.id).write_message(message)
-            # client_list_message = generate_client_list_message(clients_by_name)
-            # print(client_list_message)
-            # for client in clients:
-            #     client.write_message(client_list_message)
+        self.clients = {}
+        self.rooms = []
+        settings = {
+            'static_path': os.path.join(os.path.dirname(__file__), 'static'),
+            'template_path': os.path.join(os.path.dirname(__file__), 'templates'),
+            "cookie_secret": base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes),
+            'xsrf_cookies': False,
+            'debug': True,
+            'log_file_prefix': "tornado.log",
+        }
+        tornado.web.Application.__init__(self, handlers, **settings)
+        self.syncconnection = pymongo.Connection(MONGO_SERVER, 27017)
+        self.syncdb = self.syncconnection["cah-test"]
 
-    def on_close(self):
-        clients.pop(self.id)
+def main():
+    tornado.options.parse_command_line()
+    http_server = tornado.httpserver.HTTPServer(Application())
+    http_server.listen(options.port)
+    tornado.ioloop.IOLoop.instance().start()
 
-def generate_client_list_message(clients_by_name_list=None):
-    clients_name_dict = {"type": "client_list_update",
-                         'clients_list': (str(clients_by_name_list))}
-    return json.dumps(clients_name_dict)
-
-
-
-clients = {}
-rooms = []
-static_path = os.path.join(os.path.dirname(__file__), "static")
-handlers = [(r'/chat', WebSocketChatHandler), (r'/', MainHandler)]
-settings = dict(
-    static_path=static_path,
-    debug=True,
-    )
-game = GameHandler.Game()
-app = tornado.web.Application(handlers, **settings)
-app.listen(8888)
-tornado.ioloop.IOLoop.instance().start()
-
+if __name__ == '__main__':
+    main()
