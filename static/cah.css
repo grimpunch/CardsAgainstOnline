@@ -70,20 +70,23 @@ html>body{
     border-color: #eeeeee;
     border-radius: 5px;
     margin-inside: 5px;
+    padding-right: 20%;
+    padding-left: 20%;
 }
 
 .main-screen-card-black{
     padding: 2%;
-    float :left;
-    padding-left: 10%;
+    float :left;9
 }
 
 .main-screen-card-white{
     padding: 2%;
     float: right;
-    padding-right: 10%;
 }
-
+.main-screen-card-container {
+    padding-right: 20%;
+    padding-left: 20%;
+}
 /* Cards
 ----------------------------------------------*/
 
