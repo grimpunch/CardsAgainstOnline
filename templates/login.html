@@ -2,9 +2,30 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title></title>
+    <link href='http://fonts.googleapis.com/css?family=Arimo:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="/static/cah.css">
+    <title>Cards Against Online - Welcome</title>
 </head>
 <body>
+<div class="main-bar"><p>Cards Against Online</p></div>
+<div class="main-screen-card-container">
+    <div class="black card main-screen-card-black">What did I code instead of writing an original game?</div>
+    <div class="white card main-screen-card-white">Cards Against Online</div>
+</div>
+<div class="login-area" align="center">
+    <form id="login-form" action="/login" method="POST">
+        <p>
+            <input placeholder="Username" class="input-field" data-bind="username"/>
+        </p>
+        <p>
+            <input placeholder="Password" class="input-field" type="password" data-bind="password"/>
+        </p>
+        <p>
+            <button type=submit name="submit" value="login" class="button">Login</button>
+            <button type=submit name="submit" value="register" class="button">Register</button>
+        </p>
 
+    </form>
+</div>
 </body>
 </html>
