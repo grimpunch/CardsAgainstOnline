@@ -94,7 +94,6 @@ class LoginHandler(BaseHandler):
             self.redirect(u"/login")
 
     def set_current_user(self, user):
-        print("setting " + user)
         if user:
             self.set_secure_cookie("user", tornado.escape.json_encode(user))
         else:
@@ -140,24 +139,24 @@ class RegisterHandler(LoginHandler):
         self.render("register.html", next=self.get_argument("next", "/"))
 
     def post(self):
-        email = self.get_argument("email", "")
+        username = self.get_argument("username", "")
 
-        already_taken = self.application.syncdb['users'].find_one({'user': email})
+        already_taken = self.application.syncdb['users'].find_one({'user': username})
         if already_taken:
             error_msg = u"?error=" + tornado.escape.url_escape("Login name already taken")
             self.redirect(u"/login" + error_msg)
 
         # Warning bcrypt will block IO loop:
         password = self.get_argument("password", "")
-        hashed_pass = bcrypt.hashpw(password, bcrypt.gensalt(8))
+        hashed_pass = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(8))
 
         user = {}
-        user['user'] = email
+        user['user'] = username
         user['password'] = hashed_pass
 
         auth = self.application.syncdb['users'].save(user)
-        self.set_current_user(email)
-
+        self.set_current_user(username)
+        print(username)
         self.redirect("hello")
 
 

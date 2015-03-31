@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <link href='http://fonts.googleapis.com/css?family=Arimo:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="/static/cah.css">
+    <script src="/static/jquery-2.1.3.min.js"></script>
+    <script src="/static/login-page.js"></script>
     <title>Cards Against Online - Welcome</title>
 </head>
 <body>
@@ -13,16 +15,16 @@
     <div class="white card main-screen-card-white">Cards Against Online</div>
 </div>
 <div class="login-area" align="center">
-    <form id="login-form" action="/login" method="POST">
+    <form id="login-form" action="/action" method="POST">
         <p>
-            <input placeholder="Username" class="input-field" data-bind="username"/>
+            <input placeholder="Username" name="username" class="input-field" id="username-input" type="text" data-bind="username"/>
         </p>
         <p>
-            <input placeholder="Password" class="input-field" type="password" data-bind="password"/>
+            <input placeholder="Password" name="password" class="input-field" id="password-input" type="password" data-bind="password"/>
         </p>
         <p>
-            <button type=submit name="submit" value="login" class="button">Login</button>
-            <button type=submit name="submit" value="register" class="button">Register</button>
+            <button type=submit id="login-button" value="login" class="button">Login</button>
+            <button type=submit id="register-button" value="register" class="button">Register</button>
         </p>
 
     </form>
