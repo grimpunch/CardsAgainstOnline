@@ -51,43 +51,20 @@ class BaseHandler(RequestHandler):
         print(mp)
 
 
-class NotificationHandler(BaseHandler):
-    def get(self):
-        messages = self.application.syncdb.messages.find()
-        self.render("notification.html", messages=messages, notification='hello')
-
-
-class SlidyHandler(BaseHandler):
-    def get(self):
-        messages = self.application.syncdb.messages.find()
-        self.render("slidy.html", messages=messages, notification=self.get_flash())
-
-
-class PopupHandler(BaseHandler):
-    def get(self):
-        messages = self.application.syncdb.messages.find()
-        self.render("popup.html", notification=self.get_flash())
-
-
-class MenuTagsHandler(BaseHandler):
-    def get(self):
-        self.render("menu_tags.html", notification=self.get_flash())
-
-
 class LoginHandler(BaseHandler):
     def get(self):
-        messages = self.application.syncdb.messages.find()
         self.render("login.html", notification=self.get_flash())
 
     def post(self):
-        email = self.get_argument("email", "")
+        username = self.get_argument("username", "")
         password = self.get_argument("password", "")
+        password = password.encode('utf-8')
 
-        user = self.application.syncdb['users'].find_one({'user': email})
+        user = self.application.syncdb['users'].find_one({'user': username})
 
         # Warning bcrypt will block IO loop:
         if user and user['password'] and bcrypt.hashpw(password, user['password']) == user['password']:
-            self.set_current_user(email)
+            self.set_current_user(username)
             self.redirect("hello")
         else:
             self.set_secure_cookie('flash', "Login incorrect")
@@ -103,7 +80,6 @@ class LoginHandler(BaseHandler):
 class NoneBlockingLogin(BaseHandler):
     """ Runs Bcrypt in a thread - Allows tornado to server up other handlers but can not process multiple logins simultaneously"""
     def get(self):
-        messages = self.application.syncdb.messages.find()
         self.render("login.html", notification=self.get_flash())
 
     def initialize(self):
@@ -111,9 +87,10 @@ class NoneBlockingLogin(BaseHandler):
 
     @tornado.web.asynchronous
     def post(self):
-        email = self.get_argument('email', '')
+        username = self.get_argument("username", "")
         password = self.get_argument('password', '')
-        user = self.application.syncdb['users'].find_one({'user': email})
+        password = password.encode('utf-8')
+        user = self.application.syncdb['users'].find_one({'user': username})
 
         self.thread = threading.Thread(target=self.compute_password, args=(password, user,))
         self.thread.start()
@@ -125,8 +102,8 @@ class NoneBlockingLogin(BaseHandler):
                 return
         tornado.ioloop.IOLoop.instance().add_callback(functools.partial(self._password_fail_callback))
 
-    def _password_correct_callback(self, email):
-        self.set_current_user(email)
+    def _password_correct_callback(self, username):
+        self.set_current_user(username)
         self.redirect(self.get_argument('next', '/'))
 
     def _password_fail_callback(self):
@@ -136,7 +113,7 @@ class NoneBlockingLogin(BaseHandler):
 
 class RegisterHandler(LoginHandler):
     def get(self):
-        self.render("register.html", next=self.get_argument("next", "/"))
+        self.render("login.html", next=self.get_argument("next", "/"))
 
     def post(self):
         username = self.get_argument("username", "")
@@ -148,7 +125,8 @@ class RegisterHandler(LoginHandler):
 
         # Warning bcrypt will block IO loop:
         password = self.get_argument("password", "")
-        hashed_pass = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(8))
+        password = password.encode('utf-8')
+        hashed_pass = bcrypt.hashpw(password, bcrypt.gensalt(8))
 
         user = {}
         user['user'] = username
@@ -156,7 +134,6 @@ class RegisterHandler(LoginHandler):
 
         auth = self.application.syncdb['users'].save(user)
         self.set_current_user(username)
-        print(username)
         self.redirect("hello")
 
 
