@@ -128,9 +128,8 @@ class RegisterHandler(LoginHandler):
         password = password.encode('utf-8')
         hashed_pass = bcrypt.hashpw(password, bcrypt.gensalt(8))
 
-        user = {}
-        user['user'] = username
-        user['password'] = hashed_pass
+        user = {'user': username,
+                'password': hashed_pass}
 
         auth = self.application.syncdb['users'].save(user)
         self.set_current_user(username)
