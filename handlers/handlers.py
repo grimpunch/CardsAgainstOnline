@@ -33,9 +33,9 @@ class BaseHandler(RequestHandler):
     # Allows us to get the previous URL
     def get_referring_url(self):
         try:
-            _, _, referer, _, _, _ = urlparse(self.request.headers.get('Referer'))
-            if referer:
-                return referer
+            _, _, referrer, _, _, _ = urlparse(self.request.headers.get('Referrer'))
+            if referrer:
+                return referrer
         # Test code will throw this if there was no 'previous' page
         except AttributeError:
             pass
@@ -168,9 +168,12 @@ class ThreadHandler(tornado.web.RequestHandler):
 
 
 class HelloHandler(BaseHandler):
-    #@tornado.web.authenticated
+    @tornado.web.authenticated
     def get(self):
         messages = self.get_messages()
+        if self.get_current_user() is None:
+            self.redirect('/login')
+
         self.render("index.html", user=self.get_current_user(), messages=messages, notification=self.get_flash())
 
     def get_messages(self):
