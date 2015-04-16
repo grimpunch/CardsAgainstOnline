@@ -117,12 +117,20 @@ html>body{
     border:none;
 }
 
+.logout{
+    display: inline-flex;
+    width: 75px;
+    margin-left: 0;
+    margin-inside: 2%;
+    margin-right: 0;
+    justify-content: space-around;
+}
+
 .button:hover {
     border: none;
     background:grey;
     box-shadow: 0px 0px 1px #777;
 }
-
 
 .input-field {
     border: 1px solid #848484;
@@ -161,6 +169,43 @@ html>body{
         font-size: 10px;
         line-height: 1.3;
         margin-left: 0px;
+    }
+
+    .logout{
+        display: inline-flex;
+        width: 40px;
+        font-size: x-small;
+        margin-left: 0;
+        margin-inside: 2%;
+        margin-right: 0;
+        justify-content: space-around;
+    }
+
+    .main-bar {
+        background: #111111;
+        top: 0;
+        left: 0;
+        margin-bottom: 0.5%;
+        border-color: #eeeeee;
+        border-radius: 5px;
+        padding-right: 20%;
+        padding-left: 20%;
+        display: flex;
+        justify-content: center;
+    }
+    .main-title {
+        font-size: x-small;
+        justify-content: space-around;
+        display: flex;
+        margin-left: 20%;
+        margin-right: auto;
+    }
+    .username-profile {
+        justify-content: space-around;
+        font-size: x-small;
+        display: flex;
+        margin-left: auto;
+        margin-right: 20%;
     }
 }
 
