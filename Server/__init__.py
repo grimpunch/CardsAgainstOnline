@@ -8,5 +8,5 @@ class Room():
         self.room_name = room_name
         self.clients = {}
 
-    def get_clients(self):
-        return str(self.clients.keys())
+    def get_client_names(self):
+        return [str(client) for client in self.clients.keys()]
