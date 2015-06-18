@@ -2,27 +2,29 @@ import random
 from CardsAgainstHumanity.card_data import CardParser
 from CardsAgainstHumanity import CAHPlayer, Card
 
-
 class CardHandler():
     def __init__(self):
         self.card_db = CardParser()
-        self.all_cards = []
-        self.black_deck = self.create_deck(card_type=r'Q')
-        self.white_deck = self.create_deck(card_type=r'A')
+        self.black_deck = self.create_deck(card_type='Q')
+        self.white_deck = self.create_deck(card_type='A')
+        self.all_cards = {card.card_id: card for card in self.black_deck + self.white_deck}
         self.discarded_white_cards = []
         self.judged_cards = []
 
-    def create_deck(self, card_type=None):
+    def create_deck(self, card_type, expansions=None):
         """
         Initialises new white or black card deck for play
         :param card_type:  Indicates whether to return a white deck or black deck
         :return:
         """
-        if not card_type:
-            Exception('card_type must be specified when creating a deck')
+        if not expansions:
+            expansions = ["Base"]
         deck = []
         cards = self.card_db.return_cards()
         for card in cards:
+            if card['expansion'] not in expansions:
+                continue
+
             if card['cardType'] == card_type:
                 card = Card(card_id=card['id'],
                             card_type=card['cardType'],
@@ -30,7 +32,6 @@ class CardHandler():
                             num_answers=card['numAnswers'],
                             expansion=card['expansion'])
                 deck.append(card)
-        self.all_cards.append(deck)
         random.shuffle(deck)
         return deck
 
@@ -63,9 +64,7 @@ class CardHandler():
         return
 
     def get_card_by_id(self, card_id):
-        for card in self.all_cards:
-            if card_id == card.card_id:
-                return card
+        return self.all_cards.get(card_id)
 
 
 class Game():
@@ -85,11 +84,11 @@ class Game():
         return
 
     def remove_player(self, player_name=None):
-        quitter = self.get_player_by_name(player_name)[0]
+        quitter = self.get_player_by_name(player_name)
         for card in quitter.hand:
             self.cards.discard(card)
-            quitter.hand.remove(card)
         quitter.awesome_points = 0
+        quitter.hand = set()
         self.players.remove(quitter)
         return
 

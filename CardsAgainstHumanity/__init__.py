@@ -9,7 +9,7 @@ class CAHPlayer(object):
     def __init__(self, name=None):
         self.hand = set()
         self.awesome_points = 0
-        self.isCzar = False
+        self.is_czar = False
         self.name = name
 
 
@@ -23,5 +23,6 @@ class Card(object):
         self.text = text
         self.num_answers = num_answers
         self.expansion = expansion
+
 
 
