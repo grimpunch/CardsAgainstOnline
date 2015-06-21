@@ -2,6 +2,10 @@ import random
 from CardsAgainstHumanity.card_data import CardParser
 from CardsAgainstHumanity import CAHPlayer, Card
 
+SUBMISSION_STATE = object()
+JUDGING_STATE = object()
+
+
 class CardHandler():
     def __init__(self):
         self.card_db = CardParser()
@@ -75,6 +79,12 @@ class Game():
         self.round = 0
         self.black_deck = self.cards.black_deck
         self.white_deck = self.cards.white_deck
+        self.card_czar = None
+
+        # Turn state handlers
+        self.turn_state = None
+
+
 
     def add_player(self, player_name=None):
         player = CAHPlayer(name=player_name)
@@ -115,3 +125,19 @@ class Game():
             player.hand = []
             player.awesome_points = 0
         return
+
+    def get_czar(self):
+        if self.card_czar is None:
+            self.card_czar = random.choice(self.players)
+        return self.card_czar
+
+    def update(self):
+        if self.turn_state == SUBMISSION_STATE:
+            pass
+            # Do stuff before cards are revealed to czar
+        elif self.turn_state == JUDGING_STATE:
+            # do stuff after cards are being picked by czar
+            pass
+
+
+

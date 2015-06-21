@@ -1,15 +1,16 @@
 from CardsAgainstHumanity import GameHandler, Card, CAHPlayer, card_data
+import unittest
 
-game = GameHandler.Game()
+class TestNewGame(unittest.TestCase):
+    def setUp(self):
+        self.game = GameHandler.Game()
+        self.game.add_player('Christian')
+        self.game.add_player('Farrar')
+        self.playerChristian = self.game.get_player_by_name('Christian')
 
-game.add_player('Christian')
-game.add_player('Farrar')
+    def test(self):
+        self.assertEqual(self.playerChristian.hand_size, 10)
 
-playerChristian = game.get_player_by_name('Christian')
 
-if playerChristian.hand_size == 10:
-    print(playerChristian.hand_size)
-    list = playerChristian.hand
-    for c in list:
-        print(c.text)
+
 
