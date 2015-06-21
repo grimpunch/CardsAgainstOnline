@@ -1,6 +1,7 @@
 import pymongo
 from tornado import options
 from CardsAgainstHumanity import GameHandler
+from CardsAgainstHumanity.GameHandler import Game
 from Server import Room
 import json
 import uuid
@@ -29,6 +30,12 @@ MONGO_SERVER = 'localhost'
 class Application(tornado.web.Application):
 
     def __init__(self):
+
+        self.game = Game()
+
+        self.clients = {}
+        self.rooms = []
+
         handlers = [
         url(r'/', HelloHandler, name='index'),
         url(r'/hello', HelloHandler, name='hello'),
@@ -39,12 +46,11 @@ class Application(tornado.web.Application):
         url(r'/login', LoginHandler, name='login'),
         url(r'/register', RegisterHandler, name='register'),
         url(r'/logout', LogoutHandler, name='logout'),
-        # url(r'/chat', WebSocketChatHandler, name='wbchat'),
-        # url(r'/play', GameScreenHandler, name='game')
+        url(r'/chat', WebSocketChatHandler, {'clients': self.clients}, name='wbchat'),
+        url(r'/play', GameScreenHandler, name='game'),
+        url(r'/hand', HandHandler, name='hand')
         ]
 
-        self.clients = {}
-        self.rooms = []
         settings = {
             'static_path': os.path.join(os.path.dirname(__file__), 'static'),
             'template_path': os.path.join(os.path.dirname(__file__), 'templates'),
@@ -56,6 +62,8 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, handlers, **settings)
         self.syncconnection = pymongo.Connection(MONGO_SERVER, 27017)
         self.syncdb = self.syncconnection["cah-test"]
+
+
 
 def main():
     tornado.options.parse_command_line()

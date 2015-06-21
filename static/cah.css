@@ -30,7 +30,7 @@ height: auto;
 }
 
 .ui_header {
-    color: #000000;
+    color: #FFFFFF;
     font-family: 'Raleway',sans-serif;
     font-size: 30px;
     font-weight: 800;
@@ -95,6 +95,12 @@ html>body{
     margin: 10px;
 }
 
+.game-screen-card-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
 .main-screen-card-container {
     padding-right: 20%;
     display: flex;
@@ -142,6 +148,11 @@ html>body{
     width: 275px;
     padding-left:10px;
     padding-right:10px;
+}
+
+.hand_area {
+    float: bottom;
+    width: inherit;
 }
 
 /* Cards

@@ -79,6 +79,9 @@ if("WebSocket" in window) {
 else {
   messageContainer.appendChild(createChatEntry("[SYSTEM]", "WebSocket is NOT supported by your browser!"));
 }
+
+$('.hand_area').load('/hand');
+
 $('#message').keyup(function(evt) {
   if ((evt.keyCode || evt.which) == 13) {
     sendMessage()

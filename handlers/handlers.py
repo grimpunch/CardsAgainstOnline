@@ -1,4 +1,5 @@
 import base64
+import uuid
 from bson.objectid import ObjectId
 import os
 import bcrypt
@@ -65,7 +66,7 @@ class LoginHandler(BaseHandler):
         # Warning bcrypt will block IO loop:
         if user and user['password'] and bcrypt.hashpw(password, user['password']) == user['password']:
             self.set_current_user(username)
-            self.redirect("hello")
+            self.redirect("play")
         else:
             self.set_secure_cookie('flash', "Login incorrect")
             self.redirect(u"/login")
@@ -238,39 +239,53 @@ class MessageHandler(BaseHandler):
         return self.application.syncdb['messages'].insert(msg)
 
 
-# class GameScreenHandler(tornado.web.RequestHandler):
-#     @tornado.web.asynchronous
-#     def get(request):
-#         request.render(os.path.join(templates_path, "game_screen.html"))
+class GameScreenHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        users = self.application.syncdb['users'].find()
+        if self.get_current_user() not in self.application.game.players:
+            self.application.game.add_player(self.get_current_user())
+        self.render("game_screen.html", user=self.get_current_user(), users=users)
+
+class HandHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        print('Showing %s their hand' % self.get_current_user())
+        self.render("hand.html", hand=self.application.game.get_player_by_name(self.get_current_user()).hand)
 
 
-# class WebSocketChatHandler(tornado.websocket.WebSocketHandler):
-#     def open(self, *args):
-#         print("open", "WebSocketChatHandler")
-#         self.id = uuid.uuid4()
-#         clients[self.id] = self
-#         print('New Connection')
+class WebSocketChatHandler(tornado.websocket.WebSocketHandler):
+    def initialize(self, clients):
+        self.clients = clients
+
+    def open(self, *args):
+        print("open", "WebSocketChatHandler")
+        self.id = uuid.uuid4()
+        self.clients[self.id] = self
+        print('New Connection')
+
+    def on_message(self, message):
+        print(message)
+        message_json = json.loads(message)
+
+        # if message_json.get('room'):
+        #     if message_json['room'] not in rooms:
+        #         rooms.append({str(message_json['room']): Room(room_name=str(message_json['room']))})
+
+        for client in self.clients.values():
+            client.get(self.id).write_message(message)
+            client_list_message = generate_client_list_message(self.clients.values())
+            print(client_list_message)
+            for client in self.clients:
+                client.write_message(client_list_message)
+
+    def on_close(self):
+        self.clients.pop(self.id)
+
 #
-#     def on_message(self, message):
-#         print(message)
-#         message_json = json.loads(message)
 #
-#         if message_json.get('room'):
-#             if message_json['room'] not in rooms:
-#                 rooms.append({str(message_json['room']): Room(room_name=str(message_json['room']))})
+def generate_client_list_message(clients_by_name_list=None):
+    clients_name_dict = {"type": "client_list_update",
+                         'clients_list': (str(clients_by_name_list))}
+    return json.dumps(clients_name_dict)
 #
-#         for client in clients.values():
-#             client.get(self.id).write_message(message)
-#             client_list_message = generate_client_list_message(clients_by_name)
-#             print(client_list_message)
-#             for client in clients:
-#                 client.write_message(client_list_message)
-    #
-    # def on_close(self):
-    #     clients.pop(self.id)
-
-
-# def generate_client_list_message(clients_by_name_list=None):
-#     clients_name_dict = {"type": "client_list_update",
-#                          'clients_list': (str(clients_by_name_list))}
-#     return json.dumps(clients_name_dict)
