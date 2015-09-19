@@ -81,9 +81,11 @@ class Game():
         self.white_deck = self.cards.white_deck
         self.card_czar = None
 
+        self.time_to_judge_cards = 60
+        self.time_to_pick_cards = 60
+
         # Turn state handlers
         self.turn_state = None
-
 
 
     def add_player(self, player_name=None):
