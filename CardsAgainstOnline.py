@@ -30,9 +30,7 @@ MONGO_SERVER = 'localhost'
 class Application(tornado.web.Application):
 
     def __init__(self):
-
         self.game = Game()
-
         self.clients = {}
         self.rooms = []
 
@@ -59,17 +57,20 @@ class Application(tornado.web.Application):
             'debug': True,
             'log_file_prefix': "tornado.log",
         }
-        tornado.web.Application.__init__(self, handlers, **settings)
+        self.application = tornado.web.Application.__init__(self, handlers, **settings)
         self.syncconnection = pymongo.Connection(MONGO_SERVER, 27017)
         self.syncdb = self.syncconnection["cah-test"]
+        # Need to figure out how to run update on self.game periodically without blocking the webserver...
 
 
 
 def main():
     tornado.options.parse_command_line()
-    http_server = tornado.httpserver.HTTPServer(Application())
+    running_application = Application()
+    http_server = tornado.httpserver.HTTPServer(running_application)
     http_server.listen(options.port)
-    tornado.ioloop.IOLoop.instance().start()
+    tornado_loop = tornado.ioloop.IOLoop.instance()
+    tornado_loop.start()
 
 if __name__ == '__main__':
     main()

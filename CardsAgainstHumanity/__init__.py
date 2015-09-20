@@ -1,3 +1,6 @@
+import random
+
+
 class CAHPlayer(object):
     """
     Represents a player in the game for the game logic portion of the server.
@@ -25,4 +28,15 @@ class Card(object):
         self.expansion = expansion
 
 
+class AICAHPlayer(CAHPlayer):
+    """
+    Purely for testing, will pick cards at random to facilitate testing alone.
+    """
 
+    def play_card(self):
+        card = random.choice(self.hand)
+        return card
+
+
+    def judge_card(self, cards):
+        return random.choice(cards)

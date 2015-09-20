@@ -73,6 +73,7 @@ class CardHandler():
 
 class Game():
     def __init__(self):
+        self.pre_game = True
         self.cards = CardHandler()
         self.discards = self.cards.discarded_white_cards
         self.players = []
@@ -134,12 +135,29 @@ class Game():
         return self.card_czar
 
     def update(self):
+        print("Update Called")
+        if self.pre_game:
+            print("PreGame Called")
+            # Wait for Players
+            if len(self.players) > 2:
+                self.pre_game = False
+                # Game Starts
+                self.turn_state = SUBMISSION_STATE
+                pass
+            pass
+
+
         if self.turn_state == SUBMISSION_STATE:
+            if not self.card_czar:
+                self.card_czar = self.get_czar()
+
             pass
             # Do stuff before cards are revealed to czar
         elif self.turn_state == JUDGING_STATE:
             # do stuff after cards are being picked by czar
             pass
+        return
+
 
 
 
