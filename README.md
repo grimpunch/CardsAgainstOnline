@@ -25,3 +25,10 @@ Being able to run your own client locally is the main focus for now, there's som
 - Make a new web server just for interfacing with the game logic and running a game locally for people on the same server, no account stuff, just load up, connect players, enter your name and go.
 - Finish the game logic
 - Make a Python Programmers Against Humanity Deck for testing!
+
+### What is Cards Against Humanity?
+A card based party game for horrible people with simple rules and amusing cards.
+http://cardsagainsthumanitygame.com/
+### So what are the rules?
+http://cardsagainsthumanitygame.com/cards-against-humanity-rules/.html
+
