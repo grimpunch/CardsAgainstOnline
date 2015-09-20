@@ -12,7 +12,7 @@ class CardParser(object):
             self.card_db = json.load(json_file)
         if safe_for_work_test_strings:
             for card in self.card_db:
-                card['text'] = 'SFW Dummy Text'
+                card['text'] = 'SFW Dummy Text %d' % card['id']
 
     def return_cards(self):
         cards = self.card_db
