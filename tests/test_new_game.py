@@ -1,4 +1,4 @@
-from CardsAgainstHumanity import GameHandler, Card, CAHPlayer, card_data
+from CardsAgainstGame import GameHandler, Card, CAHPlayer, card_data
 import unittest
 
 class TestNewGame(unittest.TestCase):

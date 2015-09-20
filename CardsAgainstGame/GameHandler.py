@@ -1,6 +1,6 @@
 import random
-from CardsAgainstHumanity.card_data import CardParser
-from CardsAgainstHumanity import CAHPlayer, Card
+from CardsAgainstGame.card_data import CardParser
+from CardsAgainstGame import CAHPlayer, Card
 
 SUBMISSION_STATE = object()
 JUDGING_STATE = object()

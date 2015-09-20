@@ -1,7 +1,7 @@
 import pymongo
 from tornado import options
-from CardsAgainstHumanity import GameHandler
-from CardsAgainstHumanity.GameHandler import Game
+from CardsAgainstGame import GameHandler
+from CardsAgainstGame.GameHandler import Game
 from Server import Room
 import json
 import uuid
