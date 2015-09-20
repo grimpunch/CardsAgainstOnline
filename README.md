@@ -4,6 +4,7 @@ An open tornado with websockets implementation of multiplayer cards against huma
 ## Current state
 Currently, I have implemented partial account systems with a basic login, then it goes straight into a game for now
 You can see your hand, and a half functioning webchat that has been commented out in Javascript (it needs some love)...
+Other than that, the game logic is on the way, I need to write a new way of simulating the game logic and then add a web viewer and client that can do everything through websockets later.
 
 ## Dependencies
 - pymongo
