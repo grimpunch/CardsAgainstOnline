@@ -27,6 +27,8 @@ Being able to run your own client locally is the main focus for now, there's som
 - Finish the game logic
 - Make a Python Programmers Against Humanity Deck for testing!
 
+Consult the 'plan' folder for a rough idea of the overall design, and a mockup image of the web ui.
+
 ### What is Cards Against Humanity?
 A card based party game for horrible people with simple rules and amusing cards.
 http://cardsagainsthumanitygame.com/
