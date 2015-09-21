@@ -42,7 +42,7 @@ class AICAHPlayer(CAHPlayer):
     Purely for testing, will pick cards at random to facilitate testing alone.
     """
 
-    def play_card(self):
+    def play_card(self, card_to_play):
         card = random.choice(self.hand)
         return card
 

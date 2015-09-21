@@ -1,6 +1,5 @@
 import random
 import time
-import tornado.gen
 from CardsAgainstGame.card_data import CardParser
 from CardsAgainstGame import CAHPlayer, Card
 
@@ -154,11 +153,11 @@ class Game():
         """
         Choose and return the card czar. A czar is chosen randomly from the players but it cannot be anyone who has
         previously been the czar, until everyone has been the czar once already.
-        :return: Player object who is the card_czar
+        :return: Player object who is the new card_czar
         """
         # Cycle through all players looking for one that hasn't been the Czar
         player_count = len(self.players)
-        while not self.card_czar:              # TODO Check this is reset to None at the end of a round
+        while not self.card_czar and player_count >= 0:
             potential_czar = self.players[player_count-1]
             if potential_czar.was_czar == 0:
                 self.card_czar = potential_czar
@@ -166,12 +165,13 @@ class Game():
                 return self.card_czar
             player_count -= 1
         # If they all have been the czar, choose a random one from those who aren't the current czar and then reset all
-            # get a list of all the other players that are not czar
-            not_czar_players = [player for player in self.players if not player == self.card_czar]
-            self.card_czar = random.choice(not_czar_players)
-            self.card_czar.was_czar = 1
-            for player in self.players:
-                player.was_czar = 0
+        not_czar_players = [player for player in self.players if not player == self.card_czar]
+        self.card_czar = random.choice(not_czar_players)
+
+        for player in self.players:
+            player.was_czar = 0
+        self.card_czar.was_czar = 1
+
         return self.card_czar
 
     def update(self):
@@ -179,7 +179,7 @@ class Game():
         if self.pre_game:
             print("PreGame Called")
             # Wait for Players
-            if len(self.players) > 2:
+            if len(self.players) > 2: # surely this means that games over 2 players are not possible??
                 self.pre_game = False
                 # Game Starts
                 self.turn_state = SUBMISSION_STATE
@@ -190,12 +190,8 @@ class Game():
             if not self.card_czar:
                 self.card_czar = self.get_czar()
 
-            pass
-            # Do stuff before cards are revealed to czar
-            # Submit cards?
             # Method to run until all players have submitted
-            submission_count = 0
-            while submission_count != len(self.players) - 1: #TODO Add timer in future feature
+            while submission_count != len(self.players) - 1: #TODO Add time countdown for submission in future feature
                 submission_count = 0
                 for player in self.players:
                     if player.submitted:
