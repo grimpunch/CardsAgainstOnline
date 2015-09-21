@@ -1,5 +1,5 @@
 import os
-from CardsAgainstGame.GameHandler import Game
+# from CardsAgainstGame.GameHandler import Game
 from flask import Flask, render_template, url_for, redirect, session
 from functools import wraps
 from flask import request, Response
@@ -27,6 +27,10 @@ def login():
 def add_player(username):
     if 'username' in request.args:
         session['username'] = username
+        return redirect(url_for('/play'))
+    else:
+        return redirect(url_for('/login'))
+
 
 @app.route('/')
 @app.route('/index')
