@@ -1,15 +1,13 @@
 # CardsAgainstOnline
-An open tornado with websockets implementation of multiplayer cards against humanity for online and local users.
+An open source flask based implementation of multiplayer cards against humanity for online and local users.
 
 ## Current state
-Currently, I have implemented partial account systems with a basic login, then it goes straight into a game for now
-You can see your hand, and a half functioning webchat that has been commented out in Javascript (it needs some love)...
+Currently, We have implemented a basic login, then it goes straight into a game for now
+You can see your hand, and who the czar is.
 Other than that, the game logic is on the way, I need to write a new way of simulating the game logic and then add a web viewer and client that can do everything through websockets later.
 
 ## Dependencies
-- pymongo
-- bcrypt
-- tornado
+See requirements.txt
 
 ## Aims
 I'm attempting to create a system that allows you to run an entire game on the server, with clients connecting via any browser to play, similar to 'You Don't Know Jack' from JackBox games, but for the card game Cards Against Humanity.
