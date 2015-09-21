@@ -3,6 +3,7 @@ import os
 from flask import Flask, render_template, url_for, redirect, session
 from functools import wraps
 from flask import request, Response
+from CardsAgainstGame.GameHandler import Game
 
 app = Flask(__name__)
 print(os.path.join(os.getcwd(),'../templates'))
@@ -19,7 +20,7 @@ def login_required(f):
             return redirect(url_for('/login'))
     return decorated
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login')
 def login():
     return render_template('login.html')
 
@@ -41,7 +42,8 @@ def index():
 @login_required
 def user():
     # return the user as a string
-    return "peter"
+    print(session['username'])
+    return session['username']
 
 @app.route('/pregame')
 @login_required
@@ -68,7 +70,7 @@ def play():
     return render_template('game_screen.html')
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8888)
+    app.run(host='0.0.0.0', port=8888, debug=True)
 
 
 

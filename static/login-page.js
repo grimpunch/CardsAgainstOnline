@@ -18,6 +18,6 @@ $(document)
 })
 .on('click', '#login-button', function(){
     var loginForm = $("#login-form");
-    loginForm.attr("action", "/login");
+    loginForm.attr("action", "/add_player");
 
 });
