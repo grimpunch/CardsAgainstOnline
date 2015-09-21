@@ -1,10 +1,11 @@
 import random
+import thread
 import tornado.gen
 from CardsAgainstGame.card_data import CardParser
 from CardsAgainstGame import CAHPlayer, Card
 
-SUBMISSION_STATE = object()
-JUDGING_STATE = object()
+SUBMISSION_STATE = object() # Everyone is submitting cards
+JUDGING_STATE = object() # Everyone is waiting for judging to happen
 
 
 class CardHandler():
@@ -54,6 +55,19 @@ class CardHandler():
         assert player.hand_size == 10
         return
 
+    def draw_black_card(self, czar):
+        """
+        For the card czar specified, draw 1 fresh black cards.
+        :param player:
+        :return:
+        """
+        cards_to_draw = 1
+        if len(self.black_deck) < cards_to_draw:
+            self.shuffle_discards_into_black_deck()
+        czar.hand.add(self.black_deck.pop())
+        assert czar.hand_size == 1
+        return
+
     def discard(self, card=None):
         """
         Appends a card being removed from a players hand to the discard pile
@@ -66,6 +80,11 @@ class CardHandler():
     def shuffle_discards_into_white_deck(self):
         self.white_deck.append(self.discarded_white_cards)
         random.shuffle(self.white_deck)
+        return
+
+    def shuffle_discards_into_black_deck(self):
+        self.black_deck.append(self.discarded_black_cards)
+        random.shuffle(self.black_deck)
         return
 
     def get_card_by_id(self, card_id):
@@ -89,7 +108,6 @@ class Game():
 
         # Turn state handlers
         self.turn_state = None
-
 
     def add_player(self, player_name=None):
         player = CAHPlayer(name=player_name)
@@ -132,8 +150,27 @@ class Game():
         return
 
     def get_czar(self):
-        if self.card_czar is None:
-            self.card_czar = random.choice(self.players)
+        """
+        Choose and return the card czar. A czar is chosen randomly from the players but it cannot be anyone who has
+        previously been the czar, until everyone has been the czar once already.
+        :return: Player object who is the card_czar
+        """
+        # Cycle through all players looking for one that hasn't been the Czar
+        player_count = len(self.players)
+        while not self.card_czar:              # TODO Check this is reset to None at the end of a round
+            potential_czar = self.players[player_count-1]
+            if potential_czar.was_czar == 0:
+                self.card_czar = potential_czar
+                potential_czar.was_czar = 1
+                return self.card_czar
+            player_count -= 1
+        # If they all have been the czar, choose a random one from those who aren't the current czar and then reset all
+            # get a list of all the other players that are not czar
+            not_czar_players = [player for player in self.players if not player == self.card_czar]
+            self.card_czar = random.choice(not_czar_players)
+            self.card_czar.was_czar = 1
+            for player in self.players:
+                player.was_czar = 0
         return self.card_czar
 
     def update(self):
@@ -148,21 +185,45 @@ class Game():
                 pass
             pass
 
-
         if self.turn_state == SUBMISSION_STATE:
             if not self.card_czar:
                 self.card_czar = self.get_czar()
 
             pass
             # Do stuff before cards are revealed to czar
+            # Submit cards?
+            # Method to run until all players have submitted
+            submission_count = 0
+            while submission_count != len(self.players) - 1: #TODO Add timer in future feature
+                submission_count = 0
+                for player in self.players:
+                    if player.submitted:
+                        submission_count += 1
+            self.turn_state = JUDGING_STATE
+
         elif self.turn_state == JUDGING_STATE:
             # do stuff after cards are being picked by czar
-            pass
-
+            # reset all submitted states to zero
+            for player in self.players:
+                player.submitted = None
+            # wait for czar to pick winning white card
+            while not self.card_czar.submitted:
+                thread.sleep(1)
+            # TODO present winning card function
+            self.card_czar = None
         if self.quitting:
             return
+        # Not sure why yield is here
         yield
 
+
+# 1.) for player in self.players: player.draw_hand() # Every player draws ten white cards
+# 2.) card_czar.draw_black_card() # Czar draws a black card
+# 3.) Black card is presented??
+# 4.) All other players have X time to submit 1 chosen white card to czar
+# 5.) Czar reads all white cards and submits one as winner
+# 6.) Czar is set to None
+# 7.) Repeat
 
 
 
