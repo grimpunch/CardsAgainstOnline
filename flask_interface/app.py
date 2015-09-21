@@ -2,13 +2,14 @@ import os
 from flask import Flask, render_template
 from flask.ext.login import LoginManager
 # from .forms import LoginForm
+from CardsAgainstGame.GameHandler import Game
 
 lm = LoginManager()
 app = Flask(__name__)
 lm.init_app(app)
 app.template_folder = os.path.join(os.getcwd(),'../templates')
 app.static_folder = os.path.join(os.getcwd(),'../static')
-
+app.game = None
 
 @app.route('/')
 @app.route('/index')
@@ -32,8 +33,10 @@ def hand():
 
 @app.route('/host')
 def host():
-    # contact the game host
-    return True
+    # host a new game if a game is not started.
+    if not app.game:
+        app.game = Game()
+    return render_template('game_screen.html')
 
 @app.route('/play')
 def play():
