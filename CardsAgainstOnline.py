@@ -32,22 +32,22 @@ class Application(tornado.web.Application):
     def __init__(self):
         self.game = Game()
         self.clients = {}
-        self.rooms = []
-
         handlers = [
         url(r'/', HelloHandler, name='index'),
+        url(r'/login', LoginHandler, name='login'),
+        url(r'/play', GameScreenHandler, name='game'),
+        url(r'/hand', HandHandler, name='hand'),
         # url(r'/hello', HelloHandler, name='hello'),
-        # # url(r'/email', EmailMeHandler, name='email'),
+        # url(r'/email', EmailMeHandler, name='email'),
         # url(r'/message', MessageHandler, name='message'),
         # url(r'/thread', ThreadHandler, name='thread_handler'),
         # url(r'/login_no_block', NoneBlockingLogin, name='login_no_block'),
-        # url(r'/login', LoginHandler, name='login'),
         # url(r'/register', RegisterHandler, name='register'),
         # url(r'/logout', LogoutHandler, name='logout'),
         # url(r'/chat', WebSocketChatHandler, {'clients': self.clients}, name='wbchat'),
-        url(r'/play', GameScreenHandler, name='game'),
-        url(r'/hand', HandHandler, name='hand')
         ]
+        self.rooms = []
+
 
         settings = {
             'static_path': os.path.join(os.path.dirname(__file__), 'static'),
