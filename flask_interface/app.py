@@ -1,5 +1,4 @@
 import os
-# from CardsAgainstGame.GameHandler import Game
 from flask import Flask, render_template, url_for, redirect, session, make_response
 from flask import request, Response
 from CardsAgainstGame.GameHandler import Game
