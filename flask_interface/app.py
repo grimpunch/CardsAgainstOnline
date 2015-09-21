@@ -1,42 +1,60 @@
+"""
+flask_interface/app.py
+
+Contains the views and url mappings for the web application.
+
+"""
+
 import os
-from flask import Flask, render_template, url_for, redirect, session, make_response
-from flask import request, Response
+from flask import Flask, render_template, \
+    redirect, make_response
+from flask import request
 from CardsAgainstGame.GameHandler import Game
 from functools import wraps
-app = Flask(__name__)
-print(os.path.join(os.getcwd(),'../templates'))
-app.template_folder = os.path.join(os.getcwd(),'../templates')
-app.static_folder = os.path.join(os.getcwd(),'../static')
-app.game = None
 
 
-def login_required(f):
+APP = Flask(__name__)
+APP.template_folder = os.path.join(os.getcwd(), '../templates')
+APP.static_folder = os.path.join(os.getcwd(), '../static')
+APP.game = None
+
+
+def login_required(func):
     """
-    Redirects to login if not authenticated.
-    :param f:
-    :return:
+    Redirects to login if username not known
+    :param func:
     """
-    @wraps(f)
+    @wraps(func)
     def decorated(*args, **kwargs):
-        auth = request.authorization
-        print(request.cookies.get('username'))
-        if request.cookies.get('username') is None or not app.game:
+        """
+        Here's where the cookie crumbles
+        """
+        if request.cookies.get('username') is None or not APP.game:
             return redirect('/login')
         else:
-            return f(*args, **kwargs)
+            return func(*args, **kwargs)
     return decorated
 
-@app.route('/login')
+
+@APP.route('/login')
 def login():
+    """
+    handled in javascript
+    """
     return render_template('login.html')
 
-@app.route('/add_player', methods=['POST'])
+
+@APP.route('/add_player', methods=['POST'])
 def add_player():
-    if 'username' in request.form and app.game:
+    """
+    Api endpoint with variable username as post.
+    Username is stored in cookie.
+    """
+    if 'username' in request.form and APP.game:
         username = request.form['username']
-        if username is not '' and username not in app.game.get_player_names():
+        if username is not '' and username not in APP.game.get_player_names():
             print(username + " joined")
-            app.game.add_player(player_name=username)
+            APP.game.add_player(player_name=username)
             response = make_response(redirect('/play', code=302))
             response.set_cookie('username', username)
             return response
@@ -46,49 +64,64 @@ def add_player():
         return login()
 
 
-@app.route('/')
-@app.route('/index')
+@APP.route('/')
+@APP.route('/index')
 def index():
+    """
+    Redirected to login
+    """
     return login()
 
 
-@app.route('/user')
+@APP.route('/user')
 @login_required
 def user():
-    # return the user as a string
+    """
+    Api endpoint: return the user as a string
+    """
     username = request.cookies.get('username')
     return username
 
 
-@app.route('/pregame')
+@APP.route('/pregame')
 @login_required
 def pregame():
-    # return if we are in pregame
+    """
+    Api endpoint: return if we are in pregame
+    """
     return True
 
 
-@app.route('/hand')
+@APP.route('/hand')
 @login_required
 def hand():
-    return render_template("hand.html", hand=app.game.get_player_by_name(user.get_username()).hand)
+    """
+    Api endpoint: return the hand
+    """
+    return render_template(
+        "hand.html",
+        hand=APP.game.get_player_by_name(user.get_username()).hand
+    )
 
-@app.route('/host', methods=['GET','POST'])
+
+@APP.route('/host', methods=['GET', 'POST'])
 def host():
-    # host a new game if a game is not started.
-    if not app.game:
+    """
+    host a new game if a game is not started.
+    """
+    if not APP.game:
         print('hosting game')
-        app.game = Game()
+        APP.game = Game()
     return render_template('game_screen.html')
 
 
-@app.route('/play')
+@APP.route('/play')
 @login_required
 def play():
-    # called when in the game
+    """
+    called when the game is running
+    """
     return render_template('game_screen.html')
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8888, debug=True)
-
-
-
+    APP.run(host='0.0.0.0', port=8888, debug=True)

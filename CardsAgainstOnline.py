@@ -4,7 +4,7 @@ import uuid
 import os
 import urllib
 import base64
-from flask_interface import app
+from flask_interface.app import APP
 
 
 class Application():
@@ -13,7 +13,7 @@ class Application():
         self.game = Game()
         self.clients = {}
         self.rooms = []
-        app.run()
+        APP.run()
 
 def main():
     game.loop()
