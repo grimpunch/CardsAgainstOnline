@@ -1,16 +1,20 @@
-from flask import Flask
+import os
+from flask import Flask, render_template
 from flask.ext.login import LoginManager
 # from .forms import LoginForm
 
 lm = LoginManager()
 app = Flask(__name__)
 lm.init_app(app)
+print(os.path.join(os.getcwd(),'../templates'))
+app.template_folder = os.path.join(os.getcwd(),'../templates')
+app.static_folder = os.path.join(os.getcwd(),'../static')
 
 
 @app.route('/')
 @app.route('/index')
 def index():
-    return "Hello to Cards against Humanity!"
+    return render_template('index.html')
 
 @app.route('/user')
 def user():
