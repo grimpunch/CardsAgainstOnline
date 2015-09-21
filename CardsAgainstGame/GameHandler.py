@@ -136,14 +136,13 @@ class Game():
             self.card_czar = random.choice(self.players)
         return self.card_czar
 
-    @tornado.gen.coroutine
     def update(self):
         print("Update Called")
         if self.pre_game:
             print("PreGame Called")
             # Wait for Players
             if len(self.players) > 2:
-                self.pre_game = False
+                # self.pre_game = False
                 # Game Starts
                 self.turn_state = SUBMISSION_STATE
                 pass
