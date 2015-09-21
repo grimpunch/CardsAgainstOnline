@@ -14,10 +14,8 @@ $(document)
 .on('click', '#host-button', function(){
     var loginForm = $("#login-form");
         loginForm.attr("action", "/host");
-
 })
 .on('click', '#login-button', function(){
     var loginForm = $("#login-form");
     loginForm.attr("action", "/add_player");
-
 });

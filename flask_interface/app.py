@@ -1,6 +1,6 @@
 import os
 # from CardsAgainstGame.GameHandler import Game
-from flask import Flask, render_template, url_for, redirect, session
+from flask import Flask, render_template, url_for, redirect, session, make_response
 from functools import wraps
 from flask import request, Response
 from CardsAgainstGame.GameHandler import Game
@@ -25,12 +25,16 @@ def login():
     return render_template('login.html')
 
 @app.route('/add_player', methods=['POST'])
-def add_player(username):
-    if 'username' in request.args:
-        session['username'] = username
-        return redirect(url_for('/play'))
+def add_player():
+    if 'username' in request.form:
+        if request.form['username'] is not '':
+            username = request.form['username']
+            print(username + " joined")
+            response = make_response(render_template('game_screen.html'))
+            response.set_cookie('username', username)
+            return response
     else:
-        return redirect(url_for('/login'))
+        return login()
 
 
 @app.route('/')
@@ -42,8 +46,8 @@ def index():
 @login_required
 def user():
     # return the user as a string
-    print(session['username'])
-    return session['username']
+    username = request.cookies.get('username')
+    return username
 
 @app.route('/pregame')
 @login_required
