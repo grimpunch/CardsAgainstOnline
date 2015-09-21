@@ -1,5 +1,5 @@
 import random
-import thread
+import time
 import tornado.gen
 from CardsAgainstGame.card_data import CardParser
 from CardsAgainstGame import CAHPlayer, Card
@@ -180,7 +180,7 @@ class Game():
             print("PreGame Called")
             # Wait for Players
             if len(self.players) > 2:
-                # self.pre_game = False
+                self.pre_game = False
                 # Game Starts
                 self.turn_state = SUBMISSION_STATE
                 pass
@@ -209,8 +209,7 @@ class Game():
                 player.submitted = None
             # wait for czar to pick winning white card
             while not self.card_czar.submitted:
-                thread.sleep(1)
-            # TODO present winning card function
+                time.sleep(1)
             self.card_czar = None
         if self.quitting:
             return
