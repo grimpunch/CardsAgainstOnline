@@ -28,11 +28,10 @@ def add_player(username):
     if 'username' in request.args:
         session['username'] = username
 
-
 @app.route('/')
 @app.route('/index')
 def index():
-    return render_template('index.html')
+    return redirect(url_for('/login'))
 
 @app.route('/user')
 @login_required
