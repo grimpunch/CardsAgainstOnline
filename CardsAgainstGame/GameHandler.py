@@ -1,4 +1,5 @@
 import random
+import tornado.gen
 from CardsAgainstGame.card_data import CardParser
 from CardsAgainstGame import CAHPlayer, Card
 
@@ -74,6 +75,7 @@ class CardHandler():
 class Game():
     def __init__(self):
         self.pre_game = True
+        self.quitting = False
         self.cards = CardHandler()
         self.discards = self.cards.discarded_white_cards
         self.players = []
@@ -134,6 +136,7 @@ class Game():
             self.card_czar = random.choice(self.players)
         return self.card_czar
 
+    @tornado.gen.coroutine
     def update(self):
         print("Update Called")
         if self.pre_game:
@@ -156,7 +159,10 @@ class Game():
         elif self.turn_state == JUDGING_STATE:
             # do stuff after cards are being picked by czar
             pass
-        return
+
+        if self.quitting:
+            return
+        yield
 
 
 

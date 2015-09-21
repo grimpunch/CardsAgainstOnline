@@ -1,4 +1,3 @@
-import pymongo
 from tornado import options
 from CardsAgainstGame import GameHandler
 from CardsAgainstGame.GameHandler import Game
@@ -6,8 +5,9 @@ from Server import Room
 import json
 import uuid
 import os
-import bcrypt
-import hashlib
+# import pymongo
+# import bcrypt
+# import hashlib
 import urllib
 import base64
 import tornado.ioloop
@@ -25,7 +25,7 @@ from handlers.handlers import *
 define("port", default=8888, type=int)
 # define("config_file", default="app_config.yml", help="app_config file")
 
-MONGO_SERVER = 'localhost'
+# MONGO_SERVER = 'localhost'
 
 class Application(tornado.web.Application):
 
@@ -36,15 +36,15 @@ class Application(tornado.web.Application):
 
         handlers = [
         url(r'/', HelloHandler, name='index'),
-        url(r'/hello', HelloHandler, name='hello'),
-        url(r'/email', EmailMeHandler, name='email'),
-        url(r'/message', MessageHandler, name='message'),
-        url(r'/thread', ThreadHandler, name='thread_handler'),
-        url(r'/login_no_block', NoneBlockingLogin, name='login_no_block'),
-        url(r'/login', LoginHandler, name='login'),
-        url(r'/register', RegisterHandler, name='register'),
-        url(r'/logout', LogoutHandler, name='logout'),
-        url(r'/chat', WebSocketChatHandler, {'clients': self.clients}, name='wbchat'),
+        # url(r'/hello', HelloHandler, name='hello'),
+        # # url(r'/email', EmailMeHandler, name='email'),
+        # url(r'/message', MessageHandler, name='message'),
+        # url(r'/thread', ThreadHandler, name='thread_handler'),
+        # url(r'/login_no_block', NoneBlockingLogin, name='login_no_block'),
+        # url(r'/login', LoginHandler, name='login'),
+        # url(r'/register', RegisterHandler, name='register'),
+        # url(r'/logout', LogoutHandler, name='logout'),
+        # url(r'/chat', WebSocketChatHandler, {'clients': self.clients}, name='wbchat'),
         url(r'/play', GameScreenHandler, name='game'),
         url(r'/hand', HandHandler, name='hand')
         ]
@@ -58,18 +58,18 @@ class Application(tornado.web.Application):
             'log_file_prefix': "tornado.log",
         }
         self.application = tornado.web.Application.__init__(self, handlers, **settings)
-        self.syncconnection = pymongo.Connection(MONGO_SERVER, 27017)
-        self.syncdb = self.syncconnection["cah-test"]
+        # self.syncconnection = pymongo.Connection(MONGO_SERVER, 27017)
+        # self.syncdb = self.syncconnection["cah-test"]
         # Need to figure out how to run update on self.game periodically without blocking the webserver...
 
 
 
 def main():
     tornado.options.parse_command_line()
+    tornado_loop = tornado.ioloop.IOLoop.instance()
     running_application = Application()
     http_server = tornado.httpserver.HTTPServer(running_application)
     http_server.listen(options.port)
-    tornado_loop = tornado.ioloop.IOLoop.instance()
     tornado_loop.start()
 
 if __name__ == '__main__':
