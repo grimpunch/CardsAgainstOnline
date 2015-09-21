@@ -11,9 +11,9 @@
 //});
 
 $(document)
-.on('click', '#register-button', function(){
+.on('click', '#host-button', function(){
     var loginForm = $("#login-form");
-        loginForm.attr("action", "/register");
+        loginForm.attr("action", "/host");
 
 })
 .on('click', '#login-button', function(){
