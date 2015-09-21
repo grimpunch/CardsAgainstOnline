@@ -56,18 +56,8 @@ class LoginHandler(BaseHandler):
 
     def post(self):
         username = self.get_argument("username", "")
-        password = self.get_argument("password", "")
-        password = password.encode('utf-8')
-
-        user = self.application.syncdb['users'].find_one({'user': username})
-
-        # Warning bcrypt will block IO loop:
-        if user and user['password'] and bcrypt.hashpw(password, user['password']) == user['password']:
-            self.set_current_user(username)
-            self.redirect("play")
-        else:
-            self.set_secure_cookie('flash', "Login incorrect")
-            self.redirect(u"/login")
+        self.set_current_user(username)
+        self.redirect("play")
 
     def set_current_user(self, user):
         if user:
@@ -112,7 +102,7 @@ class LoginHandler(BaseHandler):
 #
 # class RegisterHandler(LoginHandler):
 #     def get(self):
-#         self.render("login.html", next=self.get_argument("next", "/"))
+#         self.render("play.html", next=self.get_argument("next", "/"))
 #
 #     def post(self):
 #         username = self.get_argument("username", "")
@@ -122,18 +112,17 @@ class LoginHandler(BaseHandler):
 #             error_msg = u"?error=" + tornado.escape.url_escape("Login name already taken")
 #             self.redirect(u"/login" + error_msg)
 #
-#         # Warning bcrypt will block IO loop:
-#         password = self.get_argument("password", "")
-#         password = password.encode('utf-8')
-#         hashed_pass = bcrypt.hashpw(password, bcrypt.gensalt(8))
-#
-#         user = {'user': username,
-#                 'password': hashed_pass}
-#
-#         auth = self.application.syncdb['users'].save(user)
-#         self.set_current_user(username)
-#         self.redirect("hello")
-#
+#         Warning bcrypt will block IO loop:
+        # password = self.get_argument("password", "")
+        # password = password.encode('utf-8')
+        # hashed_pass = bcrypt.hashpw(password, bcrypt.gensalt(8))
+        #
+        # user = {'user': username,
+        #         'password': hashed_pass}
+        #
+        # auth = self.application.syncdb['users'].save(user)
+        # self.set_current_user(username)
+        # self.redirect("hello")
 #
 # class LogoutHandler(BaseHandler):
 #     def get(self):
@@ -238,10 +227,16 @@ class HelloHandler(BaseHandler):
 
 class GameScreenHandler(BaseHandler):
     def get(self):
-        users = self.application.syncdb['users'].find()
-        if self.get_current_user() not in self.application.game.players:
-            self.application.game.add_player(self.get_current_user())
-        self.render("game_screen.html", user=self.get_current_user(), users=users)
+        users = self.application.clients
+        user = self.get_current_user()
+        if user not in self.application.game.players:
+            self.application.game.add_player(user)
+
+        self.render("game_screen.html", user=user, users=users)
+
+    def post(self, *args, **kwargs):
+        users = self.application.clients
+        self.render("game_screen.html", users=users)
 
 class HandHandler(BaseHandler):
     def get(self):

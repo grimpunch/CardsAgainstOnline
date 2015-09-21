@@ -36,6 +36,7 @@ class Application(tornado.web.Application):
         url(r'/', HelloHandler, name='index'),
         url(r'/login', LoginHandler, name='login'),
         url(r'/play', GameScreenHandler, name='game'),
+        url(r'/host', GameScreenHandler, name='host'),
         url(r'/hand', HandHandler, name='hand'),
         # url(r'/hello', HelloHandler, name='hello'),
         # url(r'/email', EmailMeHandler, name='email'),
