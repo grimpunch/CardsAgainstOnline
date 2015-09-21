@@ -31,7 +31,7 @@ def add_player(username):
 @app.route('/')
 @app.route('/index')
 def index():
-    return redirect(url_for('/login'))
+    return login()
 
 @app.route('/user')
 @login_required
