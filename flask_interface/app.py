@@ -1,14 +1,40 @@
 import os
-from flask import Flask, render_template
-from flask.ext.login import LoginManager
-# from .forms import LoginForm
+from CardsAgainstGame.GameHandler import Game
+from flask import Flask, render_template, url_for
+from functools import wraps
+from flask import request, Response
 
-lm = LoginManager()
 app = Flask(__name__)
-lm.init_app(app)
+print(os.path.join(os.getcwd(),'../templates'))
 app.template_folder = os.path.join(os.getcwd(),'../templates')
 app.static_folder = os.path.join(os.getcwd(),'../static')
+app.game = None
 
+class User():
+    def __init__(self):
+        self.username = None
+    def set_username(name):
+        self.username = name
+    def get_username():
+        return self.username
+
+user = User()
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if user.get_username() is None or not game:
+            return redirect(url_for('/login')
+    return decorated
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    return render_template('login.html')
+
+@app.route('/add_player/<username>', methods=['POST'])
+def add_player(username):
+   user.set_username(username) 
 
 @app.route('/')
 @app.route('/index')
@@ -16,49 +42,37 @@ def index():
     return render_template('index.html')
 
 @app.route('/user')
+@login_required
 def user():
     # return the user as a string
     return "peter"
 
 @app.route('/pregame')
+@login_required
 def pregame():
     # return if we are in pregame
     return True
 
 @app.route('/hand')
+@login_required
 def hand():
     # show the hand
     return "You have cards!"
 
 @app.route('/host')
 def host():
-    # contact the game host
-    return True
+    # host a new game if a game is not started.
+    if not app.game:
+        app.game = Game()
+    return render_template('game_screen.html')
 
 @app.route('/play')
 def play():
     # called when in the game
     return "Playing"
 
-
-@lm.user_loader
-def load_user(user_id):
-    return User.get(user_id)
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if g.user is not None and g.user.is_authenticated:
-        return redirect(url_for('index'))
-    form = LoginForm()
-    if form.validate_on_submit():
-        session['remember_me'] = form.remember_me.data
-        return oid.try_login(form.openid.data, ask_for=['nickname', 'email'])
-    return render_template('login.html', 
-                           title='Sign In',
-                           form=form,
-                           providers=app.config['OPENID_PROVIDERS'])
-
-
 if __name__ == "__main__":
-        app.run()
+    app.run(port=8888)
+
+
 
