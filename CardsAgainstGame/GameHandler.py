@@ -27,17 +27,19 @@ class CardHandler():
             expansions = ["Base"]
         deck = []
         cards = self.card_db.return_cards()
+        index = 0
         for card in cards:
             if card['expansion'] not in expansions:
                 continue
 
             if card['cardType'] == card_type:
-                card = Card(card_id=card['id'],
+                card = Card(card_id=index,
                             card_type=card['cardType'],
                             text=card['text'],
                             num_answers=card['numAnswers'],
                             expansion=card['expansion'])
                 deck.append(card)
+                index += 1
         random.shuffle(deck)
         return deck
 
