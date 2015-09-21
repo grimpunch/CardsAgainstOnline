@@ -31,12 +31,13 @@ height: auto;
 
 .ui_header {
     color: #FFFFFF;
+    background-color: #000000;
     font-family: 'Raleway',sans-serif;
     font-size: 30px;
     font-weight: 800;
     line-height: 36px;
     margin: 0 0 24px;
-    text-align: right;
+    text-align: center;
 }
 
 #chat {

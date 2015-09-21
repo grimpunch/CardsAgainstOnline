@@ -1,23 +1,18 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <script src="/static/jquery-2.1.3.min.js"></script>
+{% extends "base.html" %}
+{% block head %}
+    {{ super() }}
     <script src="/static/client.js"></script>
-      <link rel="stylesheet" type="text/css" href="/static/cah.css">
-  </head>
-
-<body>
-
+{% endblock %}
+{% block body %}
 <div id="main-wrapper">
     <div class="main-bar"><p>Cards Against Online</p></div>
     <div class="center">
+        <h2 id="join_header" class="ui_header"></h2>
         <div class="game_area">
         <h2>Czar:</h2> <h2 id="current_czar_header"></h2>
+
             <div class="hand_area game-screen-card-container"></div>
       </div>
     </div>
 </div>
-
-</body>
-</html>
+{% endblock %}
