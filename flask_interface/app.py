@@ -1,6 +1,6 @@
 import os
-from CardsAgainstGame.GameHandler import Game
-from flask import Flask, render_template, url_for
+# from CardsAgainstGame.GameHandler import Game
+from flask import Flask, render_template, url_for, redirect, session
 from functools import wraps
 from flask import request, Response
 
@@ -10,31 +10,24 @@ app.template_folder = os.path.join(os.getcwd(),'../templates')
 app.static_folder = os.path.join(os.getcwd(),'../static')
 app.game = None
 
-class User():
-    def __init__(self):
-        self.username = None
-    def set_username(name):
-        self.username = name
-    def get_username():
-        return self.username
 
-user = User()
-
-def requires_auth(f):
+def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = request.authorization
-        if user.get_username() is None or not game:
-            return redirect(url_for('/login')
+        if session['username'] is None or not game:
+            return redirect(url_for('/login'))
     return decorated
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     return render_template('login.html')
 
-@app.route('/add_player/<username>', methods=['POST'])
+@app.route('/add_player', methods=['POST'])
 def add_player(username):
-   user.set_username(username) 
+    if 'username' in request.args:
+        session['username'] = username
+
 
 @app.route('/')
 @app.route('/index')
