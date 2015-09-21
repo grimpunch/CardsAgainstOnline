@@ -243,6 +243,17 @@ class HandHandler(BaseHandler):
         print('Showing %s their hand' % self.get_current_user())
         self.render("hand.html", hand=self.application.game.get_player_by_name(self.get_current_user()).hand)
 
+
+class UserHandler(BaseHandler):
+    def get(self):
+        return self.get_current_user()
+
+
+class PreGameHandler(BaseHandler):
+    def get(self):
+        return self.application.game.pre_game
+
+
 #
 # class WebSocketChatHandler(tornado.websocket.WebSocketHandler):
 #     def initialize(self, clients):

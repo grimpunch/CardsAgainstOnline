@@ -38,6 +38,8 @@ class Application(tornado.web.Application):
         url(r'/play', GameScreenHandler, name='game'),
         url(r'/host', GameScreenHandler, name='host'),
         url(r'/hand', HandHandler, name='hand'),
+        url(r'/user', UserHandler, name='user'),
+        url(r'/pregame', PreGameHandler, name='pregame'),
         # url(r'/hello', HelloHandler, name='hello'),
         # url(r'/email', EmailMeHandler, name='email'),
         # url(r'/message', MessageHandler, name='message'),
