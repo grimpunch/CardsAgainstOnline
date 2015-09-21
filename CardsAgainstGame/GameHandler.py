@@ -132,6 +132,13 @@ class Game():
         """
         return [player for player in self.players if player_name in player.name][0]
 
+    def get_player_names(self):
+        names = []
+        for player in self.players:
+            name = player.name
+            names.append(name)
+        return names
+
     def new_game(self):
         """
         Initialises a new game

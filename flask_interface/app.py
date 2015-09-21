@@ -1,10 +1,9 @@
 import os
 # from CardsAgainstGame.GameHandler import Game
 from flask import Flask, render_template, url_for, redirect, session, make_response
-from functools import wraps
 from flask import request, Response
 from CardsAgainstGame.GameHandler import Game
-
+from functools import wraps
 app = Flask(__name__)
 print(os.path.join(os.getcwd(),'../templates'))
 app.template_folder = os.path.join(os.getcwd(),'../templates')
@@ -13,11 +12,19 @@ app.game = None
 
 
 def login_required(f):
+    """
+    Redirects to login if not authenticated.
+    :param f:
+    :return:
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = request.authorization
-        if session['username'] is None or not app.game:
-            return redirect(url_for('/login'))
+        print(request.cookies.get('username'))
+        if request.cookies.get('username') is None or not app.game:
+            return redirect('/login')
+        else:
+            return f(*args, **kwargs)
     return decorated
 
 @app.route('/login')
@@ -26,13 +33,16 @@ def login():
 
 @app.route('/add_player', methods=['POST'])
 def add_player():
-    if 'username' in request.form:
-        if request.form['username'] is not '':
-            username = request.form['username']
+    if 'username' in request.form and app.game:
+        username = request.form['username']
+        if username is not '' and username not in app.game.get_player_names():
             print(username + " joined")
-            response = make_response(render_template('game_screen.html'))
+            app.game.add_player(player_name=username)
+            response = make_response(redirect('/play', code=302))
             response.set_cookie('username', username)
             return response
+        else:
+            return 'Please enter a valid username'
     else:
         return login()
 
@@ -42,6 +52,7 @@ def add_player():
 def index():
     return login()
 
+
 @app.route('/user')
 @login_required
 def user():
@@ -49,23 +60,27 @@ def user():
     username = request.cookies.get('username')
     return username
 
+
 @app.route('/pregame')
 @login_required
 def pregame():
     # return if we are in pregame
     return True
 
+
 @app.route('/hand')
 @login_required
 def hand():
     return render_template("hand.html", hand=app.game.get_player_by_name(user.get_username()).hand)
 
-@app.route('/host')
+@app.route('/host', methods=['GET','POST'])
 def host():
     # host a new game if a game is not started.
     if not app.game:
+        print('hosting game')
         app.game = Game()
     return render_template('game_screen.html')
+
 
 @app.route('/play')
 @login_required
