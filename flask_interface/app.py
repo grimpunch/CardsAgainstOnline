@@ -6,7 +6,6 @@ from flask.ext.login import LoginManager
 lm = LoginManager()
 app = Flask(__name__)
 lm.init_app(app)
-print(os.path.join(os.getcwd(),'../templates'))
 app.template_folder = os.path.join(os.getcwd(),'../templates')
 app.static_folder = os.path.join(os.getcwd(),'../static')
 
