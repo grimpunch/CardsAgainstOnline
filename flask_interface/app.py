@@ -1,6 +1,6 @@
 from flask import Flask
 from flask.ext.login import LoginManager
-from .forms import LoginForm
+# from .forms import LoginForm
 
 lm = LoginManager()
 app = Flask(__name__)
@@ -33,7 +33,7 @@ def host():
     return True
 
 @app.route('/play')
-def hand():
+def play():
     # called when in the game
     return "Playing"
 
