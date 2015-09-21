@@ -1,5 +1,5 @@
 import os
-# from CardsAgainstGame.GameHandler import Game
+from CardsAgainstGame.GameHandler import Game
 from flask import Flask, render_template, url_for, redirect, session
 from functools import wraps
 from flask import request, Response
@@ -15,7 +15,7 @@ def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = request.authorization
-        if session['username'] is None or not game:
+        if session['username'] is None or not app.game:
             return redirect(url_for('/login'))
     return decorated
 
@@ -49,8 +49,7 @@ def pregame():
 @app.route('/hand')
 @login_required
 def hand():
-    # show the hand
-    return "You have cards!"
+    return render_template("hand.html", hand=app.game.get_player_by_name(user.get_username()).hand)
 
 @app.route('/host')
 def host():
@@ -60,9 +59,10 @@ def host():
     return render_template('game_screen.html')
 
 @app.route('/play')
+@login_required
 def play():
     # called when in the game
-    return "Playing"
+    return render_template('game_screen.html')
 
 if __name__ == "__main__":
     app.run(port=8888)
