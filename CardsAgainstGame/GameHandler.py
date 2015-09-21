@@ -15,6 +15,7 @@ class CardHandler():
         self.white_deck = self.create_deck(card_type='A')
         self.all_cards = {card.card_id: card for card in self.black_deck + self.white_deck}
         self.discarded_white_cards = []
+        self.discarded_black_cards = []
         self.judged_cards = []
 
     def create_deck(self, card_type, expansions=None):
