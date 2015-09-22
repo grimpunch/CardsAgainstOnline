@@ -14,8 +14,8 @@ from functools import wraps
 
 
 APP = Flask(__name__)
-APP.template_folder = os.path.join(os.getcwd(), '../templates')
-APP.static_folder = os.path.join(os.getcwd(), '../static')
+APP.template_folder = os.path.join(os.getcwd(), 'templates')
+APP.static_folder = os.path.join(os.getcwd(), 'static')
 APP.game = None
 
 
@@ -123,5 +123,3 @@ def play():
     """
     return render_template('game_screen.html')
 
-if __name__ == "__main__":
-    APP.run(host='0.0.0.0', port=8888, debug=True)
