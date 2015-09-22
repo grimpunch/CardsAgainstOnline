@@ -1,5 +1,6 @@
 var ws;
 var user;
+var host = null;
 var pregame;
 
 function sendMessage() {
@@ -13,10 +14,9 @@ if(data.author && data.message) {
 }
 
 window.onload = function() {
-    user = 'HOST'; //DEBUG //$().load('/user');
+    user = $().load('/user');
     pregame = $().load('/pregame');
-    console.log(user);
-    if (user == "HOST"){
+    if (window.location.pathname == '/host'){
         host = true;
     }
     if (!host){

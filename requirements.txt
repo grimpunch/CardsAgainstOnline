@@ -3,7 +3,7 @@ autopep8==1.2.1
 flake8==2.4.1
 Flask==0.10.1
 Flask-Login==0.3.0
-Jinja2==2.7
+Jinja2==2.8
 logilab-common==1.0.2
 MarkupSafe==0.23
 pep8==1.5.7

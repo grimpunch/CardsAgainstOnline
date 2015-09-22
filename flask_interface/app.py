@@ -98,9 +98,10 @@ def hand():
     """
     Api endpoint: return the hand
     """
+    username = request.cookies.get('username')
     return render_template(
         "hand.html",
-        hand=APP.game.get_player_by_name(user.get_username()).hand
+        hand=APP.game.get_player_by_name(username).hand
     )
 
 
@@ -112,6 +113,9 @@ def host():
     if not APP.game:
         print('hosting game')
         APP.game = Game()
+        response = make_response(redirect('/host', code=302))
+        response.set_cookie('username', 'HOST')
+        return response
     return render_template('game_screen.html')
 
 
