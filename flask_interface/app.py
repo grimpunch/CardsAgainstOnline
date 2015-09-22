@@ -18,6 +18,7 @@ APP.template_folder = os.path.join(os.getcwd(), 'templates')
 APP.static_folder = os.path.join(os.getcwd(), 'static')
 APP.session_key = str(os.urandom(24))
 APP.game = None
+APP.external_address = None
 
 
 
@@ -31,7 +32,7 @@ def login_required(func):
         """
         Here's where the cookie crumbles
         """
-        if request.cookies.get('username') is None or not APP.game or request.cookies.get('session') not in APP.session_key:
+        if str(request.cookies.get('username')) is None or not APP.game or str(request.cookies.get('session')) not in APP.session_key:
             response = make_response(redirect('/login'))
             response.set_cookie('session', '', expires=0)
             response.set_cookie('username', '', expires=0)
@@ -124,6 +125,10 @@ def host():
         response.set_cookie('username', 'HOST')
         return response
     return render_template('game_screen.html')
+
+@APP.route('/address')
+def address():
+    return APP.external_address
 
 
 @APP.route('/play')

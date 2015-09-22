@@ -14,22 +14,27 @@ if(data.author && data.message) {
 }
 
 window.onload = function() {
-    user = $().load('/user');
+    user = $.get('/user',function(text) {msg = text;});
     pregame = $().load('/pregame');
-    if (window.location.pathname == '/host'){
-        host = true;
-    }
-    if (!host){
+    if (window.location.pathname != '/host') {
         $('.hand_area').load('/hand');
+        console.log('user func called');
+    } else {
+        host = true;
+        console.log('host function called');
+        $.get("/address", function (data) {
+                console.log(data);
+                if (pregame) {
+                    console.log('callback called');
+                    var join_header = $('#join_header');
+                    join_header.show();
+                    join_header.text('Go to '
+                    + data +
+                    ' now!');
+                }
+        });
     }
-    else {
-        if (pregame){
-            var join_header = $('#join_header');
-            join_header.show();
-            join_header.text('Go to '+
-            window.location.host + ' on your phone!');
-        }
-    }
+
 
     $('#current_czar_header').load('/czar');
 
