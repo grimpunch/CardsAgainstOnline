@@ -6,17 +6,19 @@ Contains the views and url mappings for the web application.
 """
 
 import os
-from flask import Flask, render_template, \
-    redirect, make_response
+from flask import Flask, render_template, redirect, make_response
 from flask import request
 from CardsAgainstGame.GameHandler import Game
 from functools import wraps
+from flask_interface.utils import create_expiration_cookie_time
 
 
 APP = Flask(__name__)
 APP.template_folder = os.path.join(os.getcwd(), 'templates')
 APP.static_folder = os.path.join(os.getcwd(), 'static')
+APP.session_key = str(os.urandom(24))
 APP.game = None
+
 
 
 def login_required(func):
@@ -29,8 +31,11 @@ def login_required(func):
         """
         Here's where the cookie crumbles
         """
-        if request.cookies.get('username') is None or not APP.game:
-            return redirect('/login')
+        if request.cookies.get('username') is None or not APP.game or request.cookies.get('session') not in APP.session_key:
+            response = make_response(redirect('/login'))
+            response.set_cookie('session', '', expires=0)
+            response.set_cookie('username', '', expires=0)
+            return response
         else:
             return func(*args, **kwargs)
     return decorated
@@ -56,7 +61,9 @@ def add_player():
             print(username + " joined")
             APP.game.add_player(player_name=username)
             response = make_response(redirect('/play', code=302))
-            response.set_cookie('username', username)
+            expires = create_expiration_cookie_time()  # function generates 2 day cookie expiration date. (currently)
+            response.set_cookie('username', username, expires=expires)
+            response.set_cookie('session', APP.session_key, expires=expires)
             return response
         else:
             return 'Please enter a valid username'
