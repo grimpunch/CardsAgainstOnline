@@ -6,7 +6,7 @@ Contains the views and url mappings for the web application.
 """
 
 import os
-from flask import Flask, render_template, redirect, make_response
+from flask import Flask, render_template, redirect, make_response, jsonify
 from flask import request
 from CardsAgainstGame.GameHandler import Game
 from functools import wraps
@@ -89,6 +89,22 @@ def user():
     """
     username = request.cookies.get('username')
     return username
+
+@APP.route('/czar')
+def czar():
+    """
+    API endpoint: returns user who is the czar as a string
+    :return:
+    """
+    no_czar_response = jsonify(czar_chosen=False, czar='')
+    if not APP.game:
+        return no_czar_response
+    else:
+        if not APP.game.card_czar:
+            return no_czar_response
+        else:
+            return jsonify(czar_chosen=True, czar=APP.game.card_czar.name)
+
 
 
 @APP.route('/pregame')
