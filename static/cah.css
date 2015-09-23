@@ -170,7 +170,7 @@ html>body{
 
 .card {
     width: 204px;
-    /*height: 285px;*/
+    height: 285px;
     padding: 18px 22px;
     border-radius: 8px;
     font-weight: 700;
@@ -182,7 +182,7 @@ html>body{
 @media (max-width: 950px) {
     .card {
         width: 120px;
-        /*height: 173px;*/
+        height: 173px;
         padding: 18px 22px;
         border-radius: 8px;
         font-weight: 700;

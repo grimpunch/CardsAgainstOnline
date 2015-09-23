@@ -26,7 +26,7 @@ window.onload = function() {
         console.log('user func called');
     } else {
         host = true;
-        console.log('host function called');
+        $('#hand_area').hide();
         $.get("/address", function (data) {
                 console.log(data);
                 if (pregame) {
