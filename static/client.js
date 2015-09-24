@@ -22,8 +22,14 @@ window.onload = function() {
     });
 
     if (window.location.pathname != '/host') {
-        $('.hand_area').load('/hand');
-        console.log('user func called');
+        $('.hand_area').load('/hand', function() {
+            console.log('starting unslider');
+            var hand_banner = $('.hand_banner');
+            var slidey = hand_banner.unslider();
+            data = slidey.data('unslider');
+            data.dots();
+        });
+
     } else {
         host = true;
         $('#hand_header').hide();

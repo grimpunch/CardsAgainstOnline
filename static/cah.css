@@ -19,8 +19,8 @@
 
 .center {
 float : left;
-width: 70%;
-height: auto;
+width: 100%;
+height: 100%;
 }
 
 .right {
@@ -96,10 +96,17 @@ html>body{
     margin: 10px;
 }
 
+.game_area{
+    min-width: 300px;
+}
+
+.game-screen-card{
+    display: flex;
+    margin: 10px;
+}
+
 .game-screen-card-container {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
 }
 
 .main-screen-card-container {
@@ -150,10 +157,53 @@ html>body{
     padding-left:10px;
     padding-right:10px;
 }
+.hand_banner {
+    position: relative;
+    overflow: auto;
+    height: 100%;
+    margin: 5%;
+}
+.hand_banner li {
+    list-style: none;
+}
+.hand_banner ul li {
+    float: left;
+}
+
+.hand_banner .dots {
+    position: absolute;
+    left: 0;
+    width: 80%;
+    right: 0;
+    bottom: -5%;
+
+}
+.hand_banner .dots li {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin: 0 6px;
+
+    text-indent: -999em;
+
+    border: 2px solid #000;
+    border-radius: 6px;
+    background-color: aliceblue;
+
+    cursor: pointer;
+    opacity: .4;
+
+    -webkit-transition: background .5s, opacity .5s;
+    -moz-transition: background .5s, opacity .5s;
+    transition: background .5s, opacity .5s;
+}
+    .hand_banner .dots li.active {
+        background: #fff;
+        opacity: 1;
+    }
 
 .hand_area {
-    width: inherit;
-    overflow-x: auto;
+    width: 100%;
 }
 
 .hand_card {
@@ -169,7 +219,7 @@ html>body{
 ----------------------------------------------*/
 
 .card {
-    width: 204px;
+    width: 60%;/*204px;*/
     height: 285px;
     padding: 18px 22px;
     border-radius: 8px;
@@ -179,57 +229,57 @@ html>body{
     line-height: 1.3;
     margin-left: 0px;
 }
-@media (max-width: 950px) {
-    .card {
-        width: 120px;
-        height: 173px;
-        padding: 18px 22px;
-        border-radius: 8px;
-        font-weight: 700;
-        text-align: left;
-        font-size: 10px;
-        line-height: 1.3;
-        margin-left: 0px;
-    }
-
-    .logout{
-        display: inline-flex;
-        width: 40px;
-        font-size: x-small;
-        margin-left: 0;
-        margin-inside: 2%;
-        margin-right: 0;
-        justify-content: space-around;
-    }
-
-    .main-bar {
-        background: #111111;
-        top: 0;
-        left: 0;
-        margin-bottom: 0.5%;
-        border-color: #eeeeee;
-        border-radius: 5px;
-        padding-right: 20%;
-        padding-left: 20%;
-        display: flex;
-        justify-content: center;
-    }
-    .main-title {
-        font-size: x-small;
-        justify-content: space-around;
-        display: flex;
-        margin-left: 20%;
-        margin-right: auto;
-    }
-    .username-profile {
-        justify-content: space-around;
-        font-size: x-small;
-        display: flex;
-        margin-left: auto;
-        margin-right: 20%;
-    }
-}
-
+/*@media (max-width: 950px) {*/
+    /*.card {*/
+        /*width: 120px;*/
+        /*height: 160px;*/
+        /*padding: 18px 22px;*/
+        /*border-radius: 8px;*/
+        /*font-weight: 700;*/
+        /*text-align: left;*/
+        /*font-size: 10px;*/
+        /*line-height: 1.3;*/
+        /*margin-left: 0px;*/
+    /*}*/
+/**/
+    /*.logout{*/
+        /*display: inline-flex;*/
+        /*width: 40px;*/
+        /*font-size: x-small;*/
+        /*margin-left: 0;*/
+        /*margin-inside: 2%;*/
+        /*margin-right: 0;*/
+        /*justify-content: space-around;*/
+    /*}*/
+/**/
+    /*.main-bar {*/
+        /*background: #111111;*/
+        /*top: 0;*/
+        /*left: 0;*/
+        /*margin-bottom: 0.5%;*/
+        /*border-color: #eeeeee;*/
+        /*border-radius: 5px;*/
+        /*padding-right: 20%;*/
+        /*padding-left: 20%;*/
+        /*display: flex;*/
+        /*justify-content: center;*/
+    /*}*/
+    /*.main-title {*/
+        /*font-size: x-small;*/
+        /*justify-content: space-around;*/
+        /*display: flex;*/
+        /*margin-left: 20%;*/
+        /*margin-right: auto;*/
+    /*}*/
+    /*.username-profile {*/
+        /*justify-content: space-around;*/
+        /*font-size: x-small;*/
+        /*display: flex;*/
+        /*margin-left: auto;*/
+        /*margin-right: 20%;*/
+    /*}*/
+/*}*/
+/**/
 .black.card {
 	color:#eee;
     background: #000; /* Old browsers */
