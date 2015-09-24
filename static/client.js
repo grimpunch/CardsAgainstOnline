@@ -26,16 +26,16 @@ window.onload = function() {
         console.log('user func called');
     } else {
         host = true;
-        $('#hand_area').hide();
+        $('#hand_header').hide();
         $.get("/address", function (data) {
                 console.log(data);
                 if (pregame) {
                     console.log('callback called');
                     var join_header = $('#join_header');
-                    join_header.show();
                     join_header.text('Go to '
                     + data +
                     ' now!');
+                    join_header.show();
                 }
         });
     }
@@ -54,7 +54,7 @@ window.onload = function() {
 
     $('#message').keyup(function(evt) {
       if ((evt.keyCode || evt.which) == 13) {
-        sendMessage()
+        sendMessage();
         $('#message').val('');
         return false;
       }

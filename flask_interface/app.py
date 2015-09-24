@@ -106,14 +106,15 @@ def czar():
             return jsonify(czar_chosen=True, czar=APP.game.card_czar.name)
 
 
-
 @APP.route('/pregame')
-@login_required
 def pregame():
     """
     Api endpoint: return if we are in pregame
     """
-    return True
+    if APP.game:
+        return jsonify(pregame=APP.game.pre_game)
+    else:
+        return jsonify(pregame=False)
 
 
 @APP.route('/hand')
