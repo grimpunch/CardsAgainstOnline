@@ -104,12 +104,11 @@
 					.find('.arrows span').click(function() {
 						$.isFunction(_[this.className]) && _[this.className]();
 					});
-			};
+			}
 
 			//  Swipe support
-			if($.event.swipe) {
-				this.el.on('swipeleft', _.prev).on('swiperight', _.next);
-			}
+            //$(this.el.on('swipeleft', _.next).on('swiperight', _.prev));
+
 		};
 
 		//  Move Unslider to a slide index
