@@ -10,6 +10,7 @@ debug = True
 #  can execute arbitrary Python code on your computer.
 #  So to be externally accessible, you have to disable debug mode.
 
+
 def externaladdress(port):
     """
     Should return a string of either way to get connected to the machine running the game for display on screen.
@@ -19,11 +20,12 @@ def externaladdress(port):
     """
     return 'http://' + str(myip()) + ':' + str(port) + '/' + ' or ' + 'http://' + str(socket.gethostbyname(socket.gethostname())) + ':' + str(port) + '/'
 
+
 def main():
     port = 8888
     APP.external_address = str(externaladdress(port))
+    APP.thread.start()
     APP.run(host='0.0.0.0', port=port, debug=debug)
-
 
 if __name__ == '__main__':
     main()

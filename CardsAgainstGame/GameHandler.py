@@ -104,12 +104,13 @@ class Game():
         self.black_deck = self.cards.black_deck
         self.white_deck = self.cards.white_deck
         self.card_czar = None
-
+        self.submission_count = 0
         self.time_to_judge_cards = 60
         self.time_to_pick_cards = 60
 
         # Turn state handlers
         self.turn_state = None
+        print("Game Created")
 
     def add_player(self, player_name=None):
         player = CAHPlayer(name=player_name)
@@ -192,19 +193,17 @@ class Game():
                 self.pre_game = False
                 # Game Starts
                 self.turn_state = SUBMISSION_STATE
-                pass
-            pass
 
         if self.turn_state == SUBMISSION_STATE:
             if not self.card_czar:
                 self.card_czar = self.get_czar()
 
             # Method to run until all players have submitted
-            while submission_count != len(self.players) - 1: #TODO Add time countdown for submission in future feature
-                submission_count = 0
+            while self.submission_count != len(self.players) - 1: #TODO Add time countdown for submission in future feature
+                self.submission_count = 0
                 for player in self.players:
                     if player.submitted:
-                        submission_count += 1
+                        self.submission_count += 1
             self.turn_state = JUDGING_STATE
 
         elif self.turn_state == JUDGING_STATE:
@@ -218,8 +217,7 @@ class Game():
             self.card_czar = None
         if self.quitting:
             return
-        # Not sure why yield is here
-        yield
+        return
 
 
 # 1.) for player in self.players: player.draw_hand() # Every player draws ten white cards
