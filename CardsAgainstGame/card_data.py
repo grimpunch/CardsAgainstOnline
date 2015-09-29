@@ -1,7 +1,7 @@
 import json
 import os
-dir = os.path.realpath(__file__).replace('/CardsAgainstGame/card_data.py', '')
-cardsjsonfile = os.path.join(dir, 'static/cards.json')
+dir = os.getcwd()
+cardsjsonfile = os.path.join(dir, 'static','cards.json')
 
 # DEBUG
 safe_for_work_test_strings = True  # Change to True for real tests
