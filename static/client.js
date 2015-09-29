@@ -2,6 +2,7 @@ var ws;
 var user;
 var host = null;
 var pregame;
+var user_id;
 
 function sendMessage() {
 var data = { type: 'chat_message',
@@ -14,37 +15,41 @@ if(data.author && data.message) {
 }
 
 window.onload = function() {
-    $.get('/user',function(data) {
-        user = data;
-    });
-    $.get('/pregame',function(data) {
-        pregame = data;
+    $.when( $.get('/user'), $.get('/pregame')).then(
+        function(d1,d2) {
+            user = d1[0].name;
+            user_id = d1[0].id;
+            pregame = d2[0].pregame;
+        console.log(user);
+        console.log(user_id);
+        console.log(pregame);
+        if (window.location.pathname != '/host') {
+            $('.hand_area').load('/hand', function(data) {
+                console.log('starting unslider');
+                var hand_banner = $('.hand_banner');
+                var slidey = hand_banner.unslider();
+                data = slidey.data('unslider');
+                data.dots();
+            });
+        } else {
+            host = true;
+            $('#hand_header').hide();
+            $.get("/address", function (data) {
+                    console.log(data);
+                    if (pregame) {
+                        console.log('callback called');
+                        var join_header = $('#join_header');
+                        join_header.text('Go to '
+                        + data +
+                        ' now!');
+                        join_header.show();
+                    }
+            });
+        }
     });
 
-    if (window.location.pathname != '/host') {
-        $('.hand_area').load('/hand', function() {
-            console.log('starting unslider');
-            var hand_banner = $('.hand_banner');
-            var slidey = hand_banner.unslider();
-            data = slidey.data('unslider');
-            data.dots();
-        });
 
-    } else {
-        host = true;
-        $('#hand_header').hide();
-        $.get("/address", function (data) {
-                console.log(data);
-                if (pregame) {
-                    console.log('callback called');
-                    var join_header = $('#join_header');
-                    join_header.text('Go to '
-                    + data +
-                    ' now!');
-                    join_header.show();
-                }
-        });
-    }
+
 
     $.get("/czar", function (data) {
         var czar_header = $('#current_czar_header');

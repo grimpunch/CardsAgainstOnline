@@ -117,7 +117,10 @@ def user():
     Api endpoint: return the user as a string
     """
     username = request.cookies.get('username')
-    return username
+    uid = None
+    if APP.game:
+        uid = APP.game.get_player_by_name(username).get_id()
+    return jsonify(id=uid, name=username)
 
 @APP.route('/czar')
 def czar():
@@ -167,7 +170,6 @@ def host():
     if not APP.game:
         print('hosting game')
         APP.game = Game()
-        print(APP.game)
         response = make_response(redirect('/host', code=302))
         response.set_cookie('username', 'HOST')
         return response

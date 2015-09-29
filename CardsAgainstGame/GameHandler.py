@@ -135,6 +135,13 @@ class Game():
         """
         return [player for player in self.players if player_name in player.name][0]
 
+    def get_player_by_id(self, player_id=None):
+        """
+        Return player from game's player list via player's unique id.
+        :type players: CAHPlayer
+        """
+        return [player for player in self.players if player_id in player.get_id()][0]
+
     def get_player_names(self):
         names = []
         for player in self.players:
