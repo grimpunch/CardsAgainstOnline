@@ -4,13 +4,16 @@ var host = null;
 var pregame;
 var user_id;
 
-function sendMessage() {
-var data = { type: 'chat_message',
-             author: document.getElementById("username").value,
-             message: document.getElementById("message").value };
+var websocket = new WebSocket("ws://"+window.location.hostname+":8889");
+
+function sendMessage(message) {
+var data = { type: 'game_state_message',
+             user_id: user_id,
+             user: user,
+             message: message };
 
 if(data.author && data.message) {
-  ws.send(JSON.stringify(data));
+  websocket.send(JSON.stringify(data));
     }
 }
 
@@ -43,14 +46,17 @@ window.onload = function() {
                         + data +
                         ' now!');
                         join_header.show();
+                        user_id = '0000';
+                        sendMessage('Host is ready');
                     }
             });
         }
+        get_czar();
     });
 
+};
 
-
-
+function get_czar(){
     $.get("/czar", function (data) {
         var czar_header = $('#current_czar_header');
         var json_resp = data;
@@ -62,12 +68,4 @@ window.onload = function() {
             czar_header.hide();
         }
     });
-
-    $('#message').keyup(function(evt) {
-      if ((evt.keyCode || evt.which) == 13) {
-        sendMessage();
-        $('#message').val('');
-        return false;
-      }
-    });
-};
+}

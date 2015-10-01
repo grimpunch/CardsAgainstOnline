@@ -2,7 +2,7 @@ from flask_interface.app import APP
 from ipgetter import myip
 import socket
 
-debug = True
+debug = False
 # Important note about Debug!
 #  If you run the server you will notice that the server is only accessible
 #  from your own computer, not from any other in the network.
@@ -24,7 +24,7 @@ def externaladdress(port):
 def main():
     port = 8888
     APP.external_address = str(externaladdress(port))
-    APP.thread.start()
+    APP.game_thread.start()
     APP.run(host='0.0.0.0', port=port, debug=debug)
 
 if __name__ == '__main__':

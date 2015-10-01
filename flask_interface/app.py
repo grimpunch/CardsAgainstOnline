@@ -48,7 +48,7 @@ class GameLoopThread(Thread):
 
 STOP_EVENT = Event()
 INTERRUPT_EVENT = Event()
-APP.thread = GameLoopThread(STOP_EVENT, INTERRUPT_EVENT)
+APP.game_thread = GameLoopThread(STOP_EVENT, INTERRUPT_EVENT)
 
 
 def login_required(func):
@@ -175,6 +175,7 @@ def host():
         return response
     return render_template('game_screen.html')
 
+
 @APP.route('/address')
 def address():
     return APP.external_address
@@ -193,16 +194,17 @@ def interrupt():
     INTERRUPT_EVENT.set()
     return "OK", 200
 
-# http://flask.pocoo.org/snippets/67/
+
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
     if func is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
 
+
 @APP.route("/shutdown")
 def shutdown():
     STOP_EVENT.set()
-    APP.thread.join()
+    APP.game_thread.join()
     shutdown_server()
     return "OK", 200
