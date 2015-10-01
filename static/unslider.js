@@ -107,7 +107,12 @@
             }
 
             //  Swipe support
-            //$(this.el.on('swipeleft', _.next).on('swiperight', _.prev));
+            $(this.el).swipe({
+              swipe:function(event, direction) {
+                if(direction == 'left'){_.next();}
+                if (direction=='right'){_.prev();}
+              }
+            });
 
         };
 
