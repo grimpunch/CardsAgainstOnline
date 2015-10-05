@@ -4,71 +4,12 @@ var host = null;
 var pregame;
 var user_id;
 
-function sendMessage(message) {
-var data = { type: 'game_state_message',
-             user_id: user_id,
-             user: user,
-             message: message };
-
-if(data.author && data.message) {
-  socket.emit('my event', (JSON.stringify(data)));
-    }
-}
-
-$(document).ready(function(){
-            namespace = '/test'; // change to an empty string to use the global namespace
-            // the socket.io documentation recommends sending an explicit package upon connection
-            // this is specially important when using the global namespace
-            var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
-            socket.on('connect', function() {
-                socket.emit('my event', {data: 'I\'m connected!'});
-            });
-            // event handler for server sent data
-            // the data is displayed in the "Received" section of the page
-            socket.on('my response', function(msg) {
-                console.log('<br>Received #' + msg.count + ': ' + msg.data);
-            });
-            // handlers for the different forms in the page
-            // these send data to the server in a variety of ways
-            $('form#emit').submit(function(event) {
-                socket.emit('my event', {data: $('#emit_data').val()});
-                return false;
-            });
-            $('form#broadcast').submit(function(event) {
-                socket.emit('my broadcast event', {data: $('#broadcast_data').val()});
-                return false;
-            });
-            $('form#join').submit(function(event) {
-                socket.emit('join', {room: $('#join_room').val()});
-                return false;
-            });
-            $('form#leave').submit(function(event) {
-                socket.emit('leave', {room: $('#leave_room').val()});
-                return false;
-            });
-            $('form#send_room').submit(function(event) {
-                socket.emit('my room event', {room: $('#room_name').val(), data: $('#room_data').val()});
-                return false;
-            });
-            $('form#close').submit(function(event) {
-                socket.emit('close room', {room: $('#close_room').val()});
-                return false;
-            });
-            $('form#disconnect').submit(function(event) {
-                socket.emit('disconnect request');
-                return false;
-            });
-        });
-
 window.onload = function() {
     $.when( $.get('/user'), $.get('/pregame')).then(
         function(d1,d2) {
             user = d1[0].name;
             user_id = d1[0].id;
             pregame = d2[0].pregame;
-        console.log(user);
-        console.log(user_id);
-        console.log(pregame);
         if (window.location.pathname != '/host') {
             $('.hand_area').load('/hand', function(data) {
                 console.log('starting unslider');
@@ -90,7 +31,7 @@ window.onload = function() {
                         ' now!');
                         join_header.show();
                         user_id = '0000';
-                        sendMessage('Host is ready');
+                        user = 'HOST';
                     }
             });
         }
@@ -112,3 +53,36 @@ function get_czar(){
         }
     });
 }
+
+$(document).ready(function(){
+    namespace = '/ws'; // change to an empty string to use the global namespace
+    // the socket.io documentation recommends sending an explicit package upon connection
+    // this is specially important when using the global namespace
+    var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+    socket.on('connect', function() {
+        console.log('sending client message');
+        socket.emit(
+            'user_connected',
+            data = { type: 'client_connect',
+                     user_id: user_id,
+                     user: user
+                     }
+        );
+        return false;
+    });
+
+    socket.on('game_ready', function(msg) {
+        // Show the 'Start Game' button when enough players
+    });
+
+    socket.on('no_host', function(event) {
+        // Show 'Please wait for the game to be hosted' message
+        document.cookie = 'username=; path=/; domain='+document.domain+'; expires=' + new Date(0).toUTCString();
+    });
+
+    socket.on('czar_chosen', function(event){
+       // When server says czar is chosen, show this on the clients.
+        get_czar();
+    });
+
+});

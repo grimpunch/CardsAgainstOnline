@@ -4,6 +4,7 @@ flask_interface/app.py
 Contains the views and url mappings for the web application.
 
 """
+import json
 
 import os
 from flask import Flask, render_template, redirect, make_response, jsonify, session
@@ -62,10 +63,6 @@ class WebsocketLoopThread(Thread):
                 self.interrupt_event.clear()
 
     def loop_process(self):
-        self.count += 1
-        socketio.emit('my response',
-                      {'data': 'Server generated event', 'count': self.count},
-                      namespace='/test')
         time.sleep(1)
 
     def interrupted_process(self):
@@ -73,27 +70,34 @@ class WebsocketLoopThread(Thread):
 
 
 # SocketIO Websocket handling functionality.
-@socketio.on('my event', namespace='/test')
+@socketio.on('my event', namespace='/ws')
 def test_message(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     print('message received from client')
     emit('my response',
          {'data': message['data'], 'count': session['receive_count']})
 
-@socketio.on('disconnect request', namespace='/test')
-def disconnect_request():
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my response',
-         {'data': 'Disconnected!', 'count': session['receive_count']})
-    disconnect()
+
+@socketio.on('user_connected', namespace='/ws')
+def client_connected(message):
+    print(message)
+    if not message:
+        print('Client message called with no message')
+        return
+    if not APP.game:
+        emit('no_host')
+        return
+    if 'client_connect' in message.values() and 'user' in message.keys():
+        print('User %s connected' % message['user'])
+        print('User %s\'s ID is %s' % (message['user'],message['user_id']))
+        player = APP.game.get_player_by_name(message['user'])
+        if not player:
+            return
+        player.connected = True
+        return
 
 
-@socketio.on('connect', namespace='/test')
-def test_connect():
-    emit('my response', {'data': 'Connected', 'count': 0})
-
-
-@socketio.on('disconnect', namespace='/test')
+@socketio.on('disconnect', namespace='/ws')
 def test_disconnect():
     print('Client disconnected')
 # ##########################################

@@ -96,7 +96,9 @@ class CardHandler():
 class Game():
     def __init__(self):
         self.pre_game = True
+        self.game_ready = False
         self.quitting = False
+        self.host_connected = False
         self.cards = CardHandler()
         self.discards = self.cards.discarded_white_cards
         self.players = []
@@ -133,7 +135,10 @@ class Game():
         Return player from game's player list via player's name.
         :type players: CAHPlayer
         """
-        return [player for player in self.players if player_name in player.name][0]
+        player = [player for player in self.players if player_name in player.name]
+        if not player:
+            return None
+        return player[0]
 
     def get_player_by_id(self, player_id=None):
         """
@@ -192,9 +197,9 @@ class Game():
         return self.card_czar
 
     def update(self):
-        print("Update Called")
+        # print("Update Called")
         if self.pre_game:
-            print("PreGame Called")
+            # print("PreGame Called")
             # Wait for Players
             if len(self.players) > 2: # surely this means that games over 2 players are not possible??
                 self.pre_game = False
