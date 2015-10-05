@@ -1,4 +1,5 @@
-from flask_interface.app import APP
+import netifaces
+from flask_interface.app import APP, socketio
 from ipgetter import myip
 import socket
 
@@ -18,14 +19,26 @@ def externaladdress(port):
     :param port:
     :return:
     """
-    return 'http://' + str(myip()) + ':' + str(port) + '/' + ' or ' + 'http://' + str(socket.gethostbyname(socket.gethostname())) + ':' + str(port) + '/'
+    LANIP = None
+    interfaces = netifaces.interfaces()
+    for i in interfaces:
+        if i == 'lo':
+            continue
+        iface = netifaces.ifaddresses(i).get(netifaces.AF_INET)
+        if iface != None:
+            for j in iface:
+                LANIP = j['addr']
+    message = 'http://' + str(myip()) + ':' + str(port) + '/'
+    if LANIP:
+        message += ' or ' + 'http://' + str(LANIP) + ':' + str(port) + '/'
+    return message
 
 
 def main():
     port = 8888
     APP.external_address = str(externaladdress(port))
     APP.game_thread.start()
-    APP.run(host='0.0.0.0', port=port, debug=debug)
+    socketio.run(APP, host='0.0.0.0', port=port)
 
 if __name__ == '__main__':
     main()

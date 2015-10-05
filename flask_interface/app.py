@@ -6,11 +6,12 @@ Contains the views and url mappings for the web application.
 """
 
 import os
-from flask import Flask, render_template, redirect, make_response, jsonify
+from flask import Flask, render_template, redirect, make_response, jsonify, session
 from flask import request
 from CardsAgainstGame.GameHandler import Game
 from functools import wraps
 from flask_interface.utils import create_expiration_cookie_time
+from flask_socketio import SocketIO, emit, disconnect
 from threading import Thread, Event
 import time
 
@@ -18,9 +19,10 @@ APP = Flask(__name__)
 APP.template_folder = os.path.join(os.getcwd(), 'templates')
 APP.static_folder = os.path.join(os.getcwd(), 'static')
 APP.session_key = str(os.urandom(24))
+APP.config['SECRET_KEY'] = 'secret!'
 APP.game = None
 APP.external_address = None
-
+socketio = SocketIO(APP)
 
 
 class GameLoopThread(Thread):
@@ -38,7 +40,6 @@ class GameLoopThread(Thread):
 
     def loop_process(self):
         if APP.game:
-            print("Processing!")
             APP.game.update()
         time.sleep(1)
 
@@ -46,9 +47,61 @@ class GameLoopThread(Thread):
         print("Interrupted!")
 
 
+class WebsocketLoopThread(Thread):
+    def __init__(self, stop_event, interrupt_event):
+        self.stop_event = stop_event
+        self.interrupt_event = interrupt_event
+        self.count = 0
+        Thread.__init__(self)
+
+    def run(self):
+        while not self.stop_event.is_set():
+            self.loop_process()
+            if self.interrupt_event.is_set():
+                self.interrupted_process()
+                self.interrupt_event.clear()
+
+    def loop_process(self):
+        self.count += 1
+        socketio.emit('my response',
+                      {'data': 'Server generated event', 'count': self.count},
+                      namespace='/test')
+        time.sleep(1)
+
+    def interrupted_process(self):
+        print("Interrupted!")
+
+
+# SocketIO Websocket handling functionality.
+@socketio.on('my event', namespace='/test')
+def test_message(message):
+    session['receive_count'] = session.get('receive_count', 0) + 1
+    print('message received from client')
+    emit('my response',
+         {'data': message['data'], 'count': session['receive_count']})
+
+@socketio.on('disconnect request', namespace='/test')
+def disconnect_request():
+    session['receive_count'] = session.get('receive_count', 0) + 1
+    emit('my response',
+         {'data': 'Disconnected!', 'count': session['receive_count']})
+    disconnect()
+
+
+@socketio.on('connect', namespace='/test')
+def test_connect():
+    emit('my response', {'data': 'Connected', 'count': 0})
+
+
+@socketio.on('disconnect', namespace='/test')
+def test_disconnect():
+    print('Client disconnected')
+# ##########################################
+
 STOP_EVENT = Event()
 INTERRUPT_EVENT = Event()
 APP.game_thread = GameLoopThread(STOP_EVENT, INTERRUPT_EVENT)
+APP.websocket_thread = WebsocketLoopThread(STOP_EVENT, INTERRUPT_EVENT)
 
 
 def login_required(func):
