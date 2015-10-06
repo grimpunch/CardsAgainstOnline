@@ -72,7 +72,7 @@ class WebsocketLoopThread(Thread):
 # SocketIO Websocket handling functionality.
 @socketio.on('my event', namespace='/ws')
 def test_message(message):
-    session['receive_count'] = session.get('receive_count', 0) + 1
+    session['players_ready'] = session.get('players_ready', 0) + 1
     print('message received from client')
     emit('my response',
          {'data': message['data'], 'count': session['receive_count']})
@@ -99,6 +99,9 @@ def client_connected(message):
 
 @socketio.on('disconnect', namespace='/ws')
 def test_disconnect():
+    if not APP.game:
+        print('Removing Clients from non-active game server')
+        disconnect()
     print('Client disconnected')
 # ##########################################
 

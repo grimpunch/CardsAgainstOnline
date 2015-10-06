@@ -199,12 +199,20 @@ class Game():
     def update(self):
         # print("Update Called")
         if self.pre_game:
-            # print("PreGame Called")
             # Wait for Players
             if len(self.players) > 2: # surely this means that games over 2 players are not possible??
-                self.pre_game = False
-                # Game Starts
-                self.turn_state = SUBMISSION_STATE
+                for player in self.players:
+                    if not player.connected:
+                        self.game_ready = False
+                        self.remove_player(player) # If we have found a non-connected player pregame, remove them
+                        return
+                self.game_ready = True
+                # Now the app can broadcast game ready on socketio.
+
+        if not self.pre_game and self.game_ready and not self.turn_state:
+            # Game Starts
+            print('Game Starts')
+            self.turn_state = SUBMISSION_STATE
 
         if self.turn_state == SUBMISSION_STATE:
             if not self.card_czar:
