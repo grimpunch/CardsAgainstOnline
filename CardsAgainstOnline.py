@@ -3,7 +3,7 @@ from flask_interface.app import APP, socketio
 from ipgetter import myip
 import socket
 
-debug = False
+debug = True
 # Important note about Debug!
 #  If you run the server you will notice that the server is only accessible
 #  from your own computer, not from any other in the network.

@@ -16,15 +16,6 @@ from flask_socketio import SocketIO, emit, disconnect
 from threading import Thread, Event
 import time
 
-APP = Flask(__name__)
-APP.template_folder = os.path.join(os.getcwd(), 'templates')
-APP.static_folder = os.path.join(os.getcwd(), 'static')
-APP.session_key = str(os.urandom(24))
-APP.config['SECRET_KEY'] = 'secret!'
-APP.game = None
-APP.external_address = None
-socketio = SocketIO(APP)
-
 
 class GameLoopThread(Thread):
     def __init__(self, stop_event, interrupt_event):
@@ -42,6 +33,7 @@ class GameLoopThread(Thread):
     def loop_process(self):
         if APP.game:
             APP.game.update()
+            add_clients_to_game()
         time.sleep(1)
 
     def interrupted_process(self):
@@ -63,19 +55,48 @@ class WebsocketLoopThread(Thread):
                 self.interrupt_event.clear()
 
     def loop_process(self):
+        print('Websocket loop working')
+        send_server_state()
         time.sleep(1)
 
     def interrupted_process(self):
         print("Interrupted!")
 
+APP = Flask(__name__)
+APP.template_folder = os.path.join(os.getcwd(), 'templates')
+APP.static_folder = os.path.join(os.getcwd(), 'static')
+APP.session_key = str(os.urandom(24))
+APP.config['SECRET_KEY'] = 'secret!'
+APP.game = None
+APP.external_address = None
+socketio = SocketIO(APP)
+STOP_EVENT = Event()
+INTERRUPT_EVENT = Event()
+APP.game_thread = GameLoopThread(STOP_EVENT, INTERRUPT_EVENT)
+APP.websocket_thread = WebsocketLoopThread(STOP_EVENT, INTERRUPT_EVENT)
+APP.clients = []
+APP.host_connected = False
+
+
+def add_clients_to_game():
+    if not APP.clients:
+        return
+    if not APP.game:
+        return
+    for username in APP.clients:
+        if username not in APP.game.get_player_names():
+            APP.game.add_player(player_name=username)
+
+
+def get_host_state():
+    return APP.host_connected
 
 # SocketIO Websocket handling functionality.
-@socketio.on('my event', namespace='/ws')
-def test_message(message):
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    print('message received from client')
-    emit('my response',
-         {'data': message['data'], 'count': session['receive_count']})
+def send_server_state():
+    print('I am actually working.')
+    emit('server_state',
+         {'data': dict(host=get_host_state())
+          })
 
 
 @socketio.on('user_connected', namespace='/ws')
@@ -102,11 +123,6 @@ def test_disconnect():
     print('Client disconnected')
 # ##########################################
 
-STOP_EVENT = Event()
-INTERRUPT_EVENT = Event()
-APP.game_thread = GameLoopThread(STOP_EVENT, INTERRUPT_EVENT)
-APP.websocket_thread = WebsocketLoopThread(STOP_EVENT, INTERRUPT_EVENT)
-
 
 def login_required(func):
     """
@@ -118,7 +134,7 @@ def login_required(func):
         """
         Here's where the cookie crumbles
         """
-        if str(request.cookies.get('username')) is None or not APP.game or str(request.cookies.get('session')) not in APP.session_key:
+        if str(request.cookies.get('username')) is None or str(request.cookies.get('session')) not in APP.session_key:
             response = make_response(redirect('/login'))
             response.set_cookie('session', '', expires=0)
             response.set_cookie('username', '', expires=0)
@@ -142,15 +158,17 @@ def add_player():
     Api endpoint with variable username as post.
     Username is stored in cookie.
     """
-    if 'username' in request.form and APP.game:
+    if 'username' in request.form:
         username = request.form['username']
-        if username is not '' and username not in APP.game.get_player_names():
+        if username is not '' and username not in APP.clients:
             print(username + " joined")
-            APP.game.add_player(player_name=username)
+            APP.clients.append(username)
             response = make_response(redirect('/play', code=302))
             expires = create_expiration_cookie_time()  # function generates 2 day cookie expiration date. (currently)
             response.set_cookie('username', username, expires=expires)
             response.set_cookie('session', APP.session_key, expires=expires)
+            if APP.game:
+                add_clients_to_game()
             return response
         else:
             return 'Please enter a valid username'
@@ -229,6 +247,7 @@ def host():
         APP.game = Game()
         response = make_response(redirect('/host', code=302))
         response.set_cookie('username', 'HOST')
+        APP.host_connected = True
         return response
     return render_template('game_screen.html')
 
