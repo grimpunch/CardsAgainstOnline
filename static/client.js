@@ -26,8 +26,8 @@ window.onload = function() {
                     if (pregame) {
                         console.log('callback called');
                         var join_header = $('#join_header');
-                        join_header.text('Go to '
-                        + data +
+                        var address = data.split("or ")[1];
+                        join_header.append('<a href="' + address + '" target="_blank">Go to ' + data +
                         ' now!');
                         join_header.show();
                         user_id = '0000';
@@ -44,9 +44,11 @@ function get_czar(){
     $.get("/czar", function (data) {
         var czar_header = $('#current_czar_header');
         var json_resp = data;
+        console.log(data);
         if (json_resp['czar_chosen'] == true){
             czar_header.show();
             czar_header.text('Czar: ' + json_resp['czar']);
+            czar_header.after('<span>' + json_resp['current_black_card_text'] + '</span>');
         }
         else{
             czar_header.hide();
