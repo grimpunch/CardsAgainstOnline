@@ -182,20 +182,24 @@ def user():
         uid = APP.game.get_player_by_name(username).get_id()
     return jsonify(id=uid, name=username)
 
+
 @APP.route('/czar')
 def czar():
     """
     API endpoint: returns user who is the czar as a string
     :return:
     """
-    no_czar_response = jsonify(czar_chosen=False, czar='')
+    no_czar_response = jsonify(czar_chosen=False, czar='', current_black_card_text='', num_answers=0)
     if not APP.game:
         return no_czar_response
     else:
         if not APP.game.card_czar:
             return no_czar_response
         else:
-            return jsonify(czar_chosen=True, czar=APP.game.card_czar.name)
+            return jsonify(czar_chosen=True, czar=APP.game.card_czar.name,
+                           current_black_card_text=APP.game.current_black_card.text,
+                           num_answers=APP.game.current_black_card.num_answers
+                           )
 
 
 @APP.route('/pregame')

@@ -16,6 +16,7 @@ class CardHandler():
         self.discarded_white_cards = []
         self.discarded_black_cards = []
         self.judged_cards = []
+        self.current_black_card = None
 
     def create_deck(self, card_type, expansions=None):
         """
@@ -57,7 +58,7 @@ class CardHandler():
         assert player.hand_size == 10
         return
 
-    def draw_black_card(self, czar):
+    def draw_black_card(self):
         """
         For the card czar specified, draw 1 fresh black cards.
         :param player:
@@ -66,9 +67,9 @@ class CardHandler():
         cards_to_draw = 1
         if len(self.black_deck) < cards_to_draw:
             self.shuffle_discards_into_black_deck()
-        czar.hand.add(self.black_deck.pop())
-        assert czar.hand_size == 1
-        return
+        return self.black_deck.pop()
+        #assert czar.hand_size == 1
+        #return
 
     def discard(self, card=None):
         """
@@ -109,6 +110,7 @@ class Game():
         self.submission_count = 0
         self.time_to_judge_cards = 60
         self.time_to_pick_cards = 60
+        self.current_black_card = None
 
         # Turn state handlers
         self.turn_state = None
@@ -121,8 +123,8 @@ class Game():
         self.players.append(player)
         return
 
-    def remove_player(self, player_name=None):
-        quitter = self.get_player_by_name(player_name)
+    def remove_player(self, player=None):
+        quitter = self.get_player_by_name(player.name)
         for card in quitter.hand:
             self.cards.discard(card)
         quitter.awesome_points = 0
@@ -135,7 +137,7 @@ class Game():
         Return player from game's player list via player's name.
         :type players: CAHPlayer
         """
-        player = [player for player in self.players if player_name in player.name]
+        player = [player for player in self.players if player.name in player_name]
         if not player:
             return None
         return player[0]
@@ -179,11 +181,14 @@ class Game():
         """
         # Cycle through all players looking for one that hasn't been the Czar
         player_count = len(self.players)
+        print("picking_czar")
         while not self.card_czar and player_count >= 0:
             potential_czar = self.players[player_count-1]
+            print(potential_czar.was_czar)
             if potential_czar.was_czar == 0:
                 self.card_czar = potential_czar
                 potential_czar.was_czar = 1
+                print("pyczar", self.card_czar)
                 return self.card_czar
             player_count -= 1
         # If they all have been the czar, choose a random one from those who aren't the current czar and then reset all
@@ -197,7 +202,7 @@ class Game():
         return self.card_czar
 
     def update(self):
-        # print("Update Called")
+        print("Update Called")
         if self.pre_game:
             # Wait for Players
             if len(self.players) > 2: # surely this means that games over 2 players are not possible??
@@ -207,6 +212,7 @@ class Game():
                         self.remove_player(player) # If we have found a non-connected player pregame, remove them
                         return
                 self.game_ready = True
+                self.pre_game = False
                 # Now the app can broadcast game ready on socketio.
 
         if not self.pre_game and self.game_ready and not self.turn_state:
@@ -217,6 +223,7 @@ class Game():
         if self.turn_state == SUBMISSION_STATE:
             if not self.card_czar:
                 self.card_czar = self.get_czar()
+            self.current_black_card = self.cards.draw_black_card()
 
             # Method to run until all players have submitted
             while self.submission_count != len(self.players) - 1: #TODO Add time countdown for submission in future feature
