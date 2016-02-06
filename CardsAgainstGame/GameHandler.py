@@ -5,6 +5,7 @@ from CardsAgainstGame import CAHPlayer, Card
 
 SUBMISSION_STATE = object() # Everyone is submitting cards
 JUDGING_STATE = object() # Everyone is waiting for judging to happen
+TESTING = True
 
 
 class CardHandler():
@@ -68,8 +69,6 @@ class CardHandler():
         if len(self.black_deck) < cards_to_draw:
             self.shuffle_discards_into_black_deck()
         return self.black_deck.pop()
-        #assert czar.hand_size == 1
-        #return
 
     def discard(self, card=None):
         """
@@ -156,6 +155,14 @@ class Game():
             names.append(name)
         return names
 
+    def submit_white_card(self, player, submitted_white_card_id):
+        self.cards.judged_cards.append(self.cards.get_card_by_id(submitted_white_card_id))
+        for hand_card in player.hand.copy():
+            if hand_card.card_id == submitted_white_card_id:
+                player.hand.remove(hand_card)
+        player.submitted = True
+        return
+
     def new_game(self):
         """
         Initialises a new game
@@ -181,14 +188,12 @@ class Game():
         """
         # Cycle through all players looking for one that hasn't been the Czar
         player_count = len(self.players)
-        print("picking_czar")
         while not self.card_czar and player_count >= 0:
             potential_czar = self.players[player_count-1]
             print(potential_czar.was_czar)
             if potential_czar.was_czar == 0:
                 self.card_czar = potential_czar
                 potential_czar.was_czar = 1
-                print("pyczar", self.card_czar)
                 return self.card_czar
             player_count -= 1
         # If they all have been the czar, choose a random one from those who aren't the current czar and then reset all
@@ -202,10 +207,15 @@ class Game():
         return self.card_czar
 
     def update(self):
-        print("Update Called")
+        #print("Update Called")
         if self.pre_game:
             # Wait for Players
-            if len(self.players) > 2: # surely this means that games over 2 players are not possible??
+            if TESTING:
+                min_players = 1  # Due to cookie stuff, I need multiple browsers to test game. lowering min players=easier test
+            else:
+                min_players = 2
+
+            if len(self.players) > min_players: # surely this means that games over 2 players are not possible??
                 for player in self.players:
                     if not player.connected:
                         self.game_ready = False

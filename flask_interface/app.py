@@ -180,6 +180,7 @@ def user():
     uid = None
     if APP.game:
         uid = APP.game.get_player_by_name(username).get_id()
+        #a get socket.io between play and user
     return jsonify(id=uid, name=username)
 
 
@@ -224,6 +225,22 @@ def hand():
         "hand.html",
         hand=APP.game.get_player_by_name(username).hand
     )
+
+@APP.route('/submit_white_card', methods=['POST'])
+@login_required
+def submit_white_card():
+    """
+    Call submit white card, to remove card from players hand and add it to judge pile
+    """
+    submitted_white_card_id = int(request.form['submitted_white_card_id'])
+    username = request.cookies.get('username')
+    if APP.game:
+        player = APP.game.get_player_by_name(username)
+        APP.game.submit_white_card(player, submitted_white_card_id)
+        # Returns just a placeholder for now.
+        return "OK", 200
+    else:
+        return "Fucked up fam", 500
 
 
 @APP.route('/host', methods=['GET', 'POST'])
