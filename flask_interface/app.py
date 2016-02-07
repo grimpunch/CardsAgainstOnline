@@ -9,7 +9,7 @@ import json
 import os
 from flask import Flask, render_template, redirect, make_response, jsonify, session
 from flask import request
-from CardsAgainstGame.GameHandler import Game
+from CardsAgainstGame.GameHandler import Game, SUBMISSION_STATE, JUDGING_STATE
 from functools import wraps
 from flask_interface.utils import create_expiration_cookie_time
 from flask_socketio import SocketIO, emit, disconnect
@@ -226,19 +226,36 @@ def hand():
         hand=APP.game.get_player_by_name(username).hand
     )
 
-@APP.route('/submit_white_card', methods=['POST'])
+@APP.route('/judgement')
 @login_required
-def submit_white_card():
+def judgement():
+    """
+    Api endpoint: return the submitted white cards for judgement
+    """
+    username = request.cookies.get('username')
+    return render_template(
+        "judgement.html",
+        judgement_cards=APP.game.cards.judged_cards,
+        czar=APP.game.card_czar
+    )
+
+@socketio.on('submit_white_card', namespace='/ws')
+@login_required
+def submit_white_card(data):
     """
     Call submit white card, to remove card from players hand and add it to judge pile
     """
-    submitted_white_card_id = int(request.form['submitted_white_card_id'])
+    submitted_white_card_id = int(data["submitted_white_card_id"])
     username = request.cookies.get('username')
     if APP.game:
         player = APP.game.get_player_by_name(username)
         APP.game.submit_white_card(player, submitted_white_card_id)
-        # Returns just a placeholder for now.
-        return "OK", 200
+        if APP.game.turn_state == JUDGING_STATE:
+            response = make_response(redirect('/judgement', code=302))
+            return response
+        else:
+            # Returns just a placeholder for now.
+            return "OK", 200
     else:
         return "Fucked up fam", 500
 

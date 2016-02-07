@@ -105,7 +105,8 @@ $(document).ready(function(){
     });
 
     $("#submit_white_card").click(function(){
-        $.post("/submit_white_card", {submitted_white_card_id: white_card_id})
+        //$.post("/submit_white_card", {submitted_white_card_id: white_card_id})
+        socket.emit("submit_white_card", {submitted_white_card_id: white_card_id});
     });
 
 });
