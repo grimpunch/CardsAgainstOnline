@@ -9,7 +9,7 @@ import json
 import os
 from flask import Flask, render_template, redirect, make_response, jsonify, session
 from flask import request
-from CardsAgainstGame.GameHandler import Game
+from CardsAgainstGame.GameHandler import Game, SUBMISSION_STATE, JUDGING_STATE
 from functools import wraps
 from flask_interface.utils import create_expiration_cookie_time
 from flask_socketio import SocketIO, emit, disconnect
@@ -180,7 +180,9 @@ def user():
     uid = None
     if APP.game:
         uid = APP.game.get_player_by_name(username).get_id()
+        #a get socket.io between play and user
     return jsonify(id=uid, name=username)
+
 
 @APP.route('/czar')
 def czar():
@@ -188,14 +190,17 @@ def czar():
     API endpoint: returns user who is the czar as a string
     :return:
     """
-    no_czar_response = jsonify(czar_chosen=False, czar='')
+    no_czar_response = jsonify(czar_chosen=False, czar='', current_black_card_text='', num_answers=0)
     if not APP.game:
         return no_czar_response
     else:
         if not APP.game.card_czar:
             return no_czar_response
         else:
-            return jsonify(czar_chosen=True, czar=APP.game.card_czar.name)
+            return jsonify(czar_chosen=True, czar=APP.game.card_czar.name,
+                           current_black_card_text=APP.game.current_black_card.text,
+                           num_answers=APP.game.current_black_card.num_answers
+                           )
 
 
 @APP.route('/pregame')
@@ -220,6 +225,39 @@ def hand():
         "hand.html",
         hand=APP.game.get_player_by_name(username).hand
     )
+
+@APP.route('/judgement')
+@login_required
+def judgement():
+    """
+    Api endpoint: return the submitted white cards for judgement
+    """
+    username = request.cookies.get('username')
+    return render_template(
+        "judgement.html",
+        judgement_cards=APP.game.cards.judged_cards,
+        czar=APP.game.card_czar
+    )
+
+@socketio.on('submit_white_card', namespace='/ws')
+@login_required
+def submit_white_card(data):
+    """
+    Call submit white card, to remove card from players hand and add it to judge pile
+    """
+    submitted_white_card_id = int(data["submitted_white_card_id"])
+    username = request.cookies.get('username')
+    if APP.game:
+        player = APP.game.get_player_by_name(username)
+        APP.game.submit_white_card(player, submitted_white_card_id)
+        if APP.game.turn_state == JUDGING_STATE:
+            response = make_response(redirect('/judgement', code=302))
+            return response
+        else:
+            # Returns just a placeholder for now.
+            return "OK", 200
+    else:
+        return "Fucked up fam", 500
 
 
 @APP.route('/host', methods=['GET', 'POST'])
