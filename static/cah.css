@@ -63,6 +63,11 @@ html>body{
     color: #eeeeee;
 }
 
+#join_header > a{
+    text-decoration: none !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
 .main-bar {
     background: #111111;
     top: 0;

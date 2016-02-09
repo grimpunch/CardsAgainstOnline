@@ -37,6 +37,7 @@ window.onload = function() {
         } else {
             host = true;
             $('#hand_header').hide();
+            $("#submit_white_card_button").hide();
             $.get("/address", function (data) {
                     console.log(data);
                     if (pregame) {
@@ -104,9 +105,8 @@ $(document).ready(function(){
         get_czar();
     });
 
-    $("#submit_white_card").click(function(){
-        //$.post("/submit_white_card", {submitted_white_card_id: white_card_id})
-        socket.emit("submit_white_card", {submitted_white_card_id: white_card_id});
+    $("#submit_white_card_button").click(function(){
+        socket.emit("submit_white_card_button", {submitted_white_card_id: white_card_id});
     });
 
 });
