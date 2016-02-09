@@ -16,7 +16,7 @@ window.onload = function() {
                 var hand_banner = $('.hand_banner');
                 var slidey = hand_banner.unslider({
                     dots: true,
-                    starting: function(el) {
+                    init: function(el) {
                         if (slider_data)
                         {
                             $(slider_data.items[slider_data.current]).addClass('active');
@@ -106,7 +106,12 @@ $(document).ready(function(){
     });
 
     $("#submit_white_card_button").click(function(){
-        socket.emit("submit_white_card_button", {submitted_white_card_id: white_card_id});
+        // need to handle case where white_card_id isn't set on load.
+        socket.emit("user_submit_white_card",
+                   { user_id: user_id,
+                     user: user,
+                     submitted_white_card_id: white_card_id
+                   });
     });
 
 });

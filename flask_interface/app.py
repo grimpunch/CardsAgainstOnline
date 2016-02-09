@@ -79,18 +79,18 @@ def test_message(message):
 
 
 @socketio.on('user_connected', namespace='/ws')
-def client_connected(message):
-    print(message)
-    if not message:
-        print('Client message called with no message')
+def client_connected(data):
+    print(data)
+    if not data:
+        print('Client data called with no data')
         return
     if not APP.game:
         emit('no_host')
         return
-    if 'client_connect' in message.values() and 'user' in message.keys():
-        print('User %s connected' % message['user'])
-        print('User %s\'s ID is %s' % (message['user'],message['user_id']))
-        player = APP.game.get_player_by_name(message['user'])
+    if 'client_connect' in data.values() and 'user' in data.keys():
+        print('User %s connected' % data['user'])
+        print('User %s\'s ID is %s' % (data['user'],data['user_id']))
+        player = APP.game.get_player_by_name(data['user'])
         if not player:
             return
         player.connected = True
@@ -239,14 +239,16 @@ def judgement():
         czar=APP.game.card_czar
     )
 
-@socketio.on('submit_white_card', namespace='/ws')
+@socketio.on('user_submit_white_card', namespace='/ws')
 @login_required
 def submit_white_card(data):
     """
     Call submit white card, to remove card from players hand and add it to judge pile
     """
+    print(data)
+    print(data.items())
     submitted_white_card_id = int(data["submitted_white_card_id"])
-    username = request.cookies.get('username')
+    username = data["user"]
     if APP.game:
         player = APP.game.get_player_by_name(username)
         APP.game.submit_white_card(player, submitted_white_card_id)
