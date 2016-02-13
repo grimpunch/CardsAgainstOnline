@@ -33,3 +33,5 @@ http://cardsagainsthumanitygame.com/
 ### So what are the rules?
 http://cardsagainsthumanitygame.com/cards-against-humanity-rules/.html
 
+### License
+See LICENSE.txt, I have licensed the source under the MIT license. https://tldrlegal.com/license/mit-license

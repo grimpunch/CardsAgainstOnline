@@ -9,12 +9,21 @@ import json
 import os
 from flask import Flask, render_template, redirect, make_response, jsonify, session
 from flask import request
-from CardsAgainstGame.GameHandler import Game
+from CardsAgainstGame.GameHandler import Game, SUBMISSION_STATE, JUDGING_STATE
 from functools import wraps
 from flask_interface.utils import create_expiration_cookie_time
 from flask_socketio import SocketIO, emit, disconnect
 from threading import Thread, Event
 import time
+
+APP = Flask(__name__)
+APP.template_folder = os.path.join(os.getcwd(), 'templates')
+APP.static_folder = os.path.join(os.getcwd(), 'static')
+APP.session_key = str(os.urandom(24))
+APP.config['SECRET_KEY'] = 'secret!'
+APP.game = None
+APP.external_address = None
+socketio = SocketIO(APP)
 
 
 class GameLoopThread(Thread):
@@ -33,7 +42,6 @@ class GameLoopThread(Thread):
     def loop_process(self):
         if APP.game:
             APP.game.update()
-            add_clients_to_game()
         time.sleep(1)
 
     def interrupted_process(self):
@@ -55,63 +63,34 @@ class WebsocketLoopThread(Thread):
                 self.interrupt_event.clear()
 
     def loop_process(self):
-        print('Websocket loop working')
-        send_server_state()
         time.sleep(1)
 
     def interrupted_process(self):
         print("Interrupted!")
 
-APP = Flask(__name__)
-APP.template_folder = os.path.join(os.getcwd(), 'templates')
-APP.static_folder = os.path.join(os.getcwd(), 'static')
-APP.session_key = str(os.urandom(24))
-APP.config['SECRET_KEY'] = 'secret!'
-APP.game = None
-APP.external_address = None
-socketio = SocketIO(APP)
-STOP_EVENT = Event()
-INTERRUPT_EVENT = Event()
-APP.game_thread = GameLoopThread(STOP_EVENT, INTERRUPT_EVENT)
-APP.websocket_thread = WebsocketLoopThread(STOP_EVENT, INTERRUPT_EVENT)
-APP.clients = []
-APP.host_connected = False
-
-
-def add_clients_to_game():
-    if not APP.clients:
-        return
-    if not APP.game:
-        return
-    for username in APP.clients:
-        if username not in APP.game.get_player_names():
-            APP.game.add_player(player_name=username)
-
-
-def get_host_state():
-    return APP.host_connected
 
 # SocketIO Websocket handling functionality.
-def send_server_state():
-    print('I am actually working.')
-    emit('server_state',
-         {'data': dict(host=get_host_state())
-          })
+@socketio.on('my event', namespace='/ws')
+def test_message(message):
+    session['players_ready'] = session.get('players_ready', 0) + 1
+    print('message received from client')
+    emit('my response',
+         {'data': message['data'], 'count': session['receive_count']})
 
 
 @socketio.on('user_connected', namespace='/ws')
-def client_connected(message):
-    print(message)
-    if not message:
-        print('Client message called with no message')
+def client_connected(data):
+    print(data)
+    if not data:
+        print('Client data called with no data')
         return
     if not APP.game:
         emit('no_host')
         return
-    if 'client_connect' in message.values() and 'user' in message.keys():
-        print('User %s connected' % message['user'])
-        print('User %s\'s ID is %s' % (message['user'],message['user_id']))
-        player = APP.game.get_player_by_name(message['user'])
+    if 'client_connect' in data.values() and 'user' in data.keys():
+        print('User %s connected' % data['user'])
+        print('User %s\'s ID is %s' % (data['user'],data['user_id']))
+        player = APP.game.get_player_by_name(data['user'])
         if not player:
             return
         player.connected = True
@@ -120,8 +99,16 @@ def client_connected(message):
 
 @socketio.on('disconnect', namespace='/ws')
 def test_disconnect():
+    if not APP.game:
+        print('Removing Clients from non-active game server')
+        disconnect()
     print('Client disconnected')
 # ##########################################
+
+STOP_EVENT = Event()
+INTERRUPT_EVENT = Event()
+APP.game_thread = GameLoopThread(STOP_EVENT, INTERRUPT_EVENT)
+APP.websocket_thread = WebsocketLoopThread(STOP_EVENT, INTERRUPT_EVENT)
 
 
 def login_required(func):
@@ -134,7 +121,7 @@ def login_required(func):
         """
         Here's where the cookie crumbles
         """
-        if str(request.cookies.get('username')) is None or str(request.cookies.get('session')) not in APP.session_key:
+        if str(request.cookies.get('username')) is None or not APP.game or str(request.cookies.get('session')) not in APP.session_key:
             response = make_response(redirect('/login'))
             response.set_cookie('session', '', expires=0)
             response.set_cookie('username', '', expires=0)
@@ -158,17 +145,15 @@ def add_player():
     Api endpoint with variable username as post.
     Username is stored in cookie.
     """
-    if 'username' in request.form:
+    if 'username' in request.form and APP.game:
         username = request.form['username']
-        if username is not '' and username not in APP.clients:
+        if username is not '' and username not in APP.game.get_player_names():
             print(username + " joined")
-            APP.clients.append(username)
+            APP.game.add_player(player_name=username)
             response = make_response(redirect('/play', code=302))
             expires = create_expiration_cookie_time()  # function generates 2 day cookie expiration date. (currently)
             response.set_cookie('username', username, expires=expires)
             response.set_cookie('session', APP.session_key, expires=expires)
-            if APP.game:
-                add_clients_to_game()
             return response
         else:
             return 'Please enter a valid username'
@@ -195,7 +180,9 @@ def user():
     uid = None
     if APP.game:
         uid = APP.game.get_player_by_name(username).get_id()
+        #a get socket.io between play and user
     return jsonify(id=uid, name=username)
+
 
 @APP.route('/czar')
 def czar():
@@ -203,14 +190,17 @@ def czar():
     API endpoint: returns user who is the czar as a string
     :return:
     """
-    no_czar_response = jsonify(czar_chosen=False, czar='')
+    no_czar_response = jsonify(czar_chosen=False, czar='', current_black_card_text='', num_answers=0)
     if not APP.game:
         return no_czar_response
     else:
         if not APP.game.card_czar:
             return no_czar_response
         else:
-            return jsonify(czar_chosen=True, czar=APP.game.card_czar.name)
+            return jsonify(czar_chosen=True, czar=APP.game.card_czar.name,
+                           current_black_card_text=APP.game.current_black_card.text,
+                           num_answers=APP.game.current_black_card.num_answers
+                           )
 
 
 @APP.route('/pregame')
@@ -236,6 +226,41 @@ def hand():
         hand=APP.game.get_player_by_name(username).hand
     )
 
+@APP.route('/judgement')
+@login_required
+def judgement():
+    """
+    Api endpoint: return the submitted white cards for judgement
+    """
+    username = request.cookies.get('username')
+    return render_template(
+        "judgement.html",
+        judgement_cards=APP.game.cards.judged_cards,
+        czar=APP.game.card_czar
+    )
+
+@socketio.on('user_submit_white_card', namespace='/ws')
+@login_required
+def submit_white_card(data):
+    """
+    Call submit white card, to remove card from players hand and add it to judge pile
+    """
+    print(data)
+    print(data.items())
+    submitted_white_card_id = int(data["submitted_white_card_id"])
+    username = data["user"]
+    if APP.game:
+        player = APP.game.get_player_by_name(username)
+        APP.game.submit_white_card(player, submitted_white_card_id)
+        if APP.game.turn_state == JUDGING_STATE:
+            response = make_response(redirect('/judgement', code=302))
+            return response
+        else:
+            # Returns just a placeholder for now.
+            return "OK", 200
+    else:
+        return "Fucked up fam", 500
+
 
 @APP.route('/host', methods=['GET', 'POST'])
 def host():
@@ -247,7 +272,6 @@ def host():
         APP.game = Game()
         response = make_response(redirect('/host', code=302))
         response.set_cookie('username', 'HOST')
-        APP.host_connected = True
         return response
     return render_template('game_screen.html')
 

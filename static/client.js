@@ -3,65 +3,68 @@ var user;
 var host = null;
 var pregame;
 var user_id;
+var white_card_id;
 
-function show_host_view() {
-    host = true;
-    $('#hand_header').hide();
-    $('#waiting_for_host_header').hide();
-    $.get("/address", function (data) {
-        console.log(data);
-        if (pregame) {
-            console.log('callback called');
-            var join_header = $('#join_header');
-            join_header.text('Go to '
-            + data +
-            ' now!');
-            join_header.show();
-            user_id = '0000';
-            user = 'HOST';
-        }
-    });
-}
-function show_table() {
-    $.when($.get('/user'), $.get('/pregame')).then(
-        function (d1, d2) {
+window.onload = function() {
+    $.when( $.get('/user'), $.get('/pregame')).then(
+        function(d1,d2) {
             user = d1[0].name;
             user_id = d1[0].id;
             pregame = d2[0].pregame;
-            if (window.location.pathname != '/host') {
-                $('.hand_area').load('/hand', function (data) {
-                    console.log('starting unslider');
-                    $('#hand_header').show();
-                    var hand_banner = $('.hand_banner');
-                    var slidey = hand_banner.unslider();
-                    data = slidey.data('unslider');
-                    data.dots();
+        if (window.location.pathname != '/host') {
+            $('.hand_area').load('/hand', function(data) {
+                var hand_banner = $('.hand_banner');
+                var slidey = hand_banner.unslider({
+                    dots: true,
+                    complete: function(el) {
+                        if(slider_data)
+                        {
+                            slider_data.items.removeClass('active');
+                            $(slider_data.items[slider_data.current]).addClass('active');
+                            white_card_id = el.find('.active').children("div").attr("id");
+                        }
+                    }
                 });
-            } else {
-             show_host_view();
-            }
-            get_czar();
-        });
-}
+                var slider_data = slidey.data('unslider');
+                if(slider_data)
+                {
+                    slider_data.items.removeClass('active');
+                    $(slider_data.items[slider_data.current]).addClass('active');
+                    white_card_id = slidey.find('.active').children("div").attr("id");
+                }
+            });
+        } else {
+            host = true;
+            $('#hand_header').hide();
+            $("#submit_white_card_button").hide();
+            $.get("/address", function (data) {
+                    console.log(data);
+                    if (pregame) {
+                        console.log('callback called');
+                        var join_header = $('#join_header');
+                        var address = data.split("or ")[1];
+                        join_header.append('<a href="' + address + '" target="_blank">Go to ' + data +
+                        ' now!');
+                        join_header.show();
+                        user_id = '0000';
+                        user = 'HOST';
+                    }
+            });
+        }
+        get_czar();
+    });
 
-
-function hide_table() {
-    $('#hand_header').hide();
-    $('#current_czar_header').hide();
-    $('#waiting_for_host_header').show();
-}
-
-function show_waiting_for_host() {
-    $('#waiting_for_host_header').show();
-}
+};
 
 function get_czar(){
     $.get("/czar", function (data) {
         var czar_header = $('#current_czar_header');
         var json_resp = data;
+        console.log(data);
         if (json_resp['czar_chosen'] == true){
             czar_header.show();
             czar_header.text('Czar: ' + json_resp['czar']);
+            czar_header.after('<span>' + json_resp['current_black_card_text'] + '</span>');
         }
         else{
             czar_header.hide();
@@ -69,12 +72,8 @@ function get_czar(){
     });
 }
 
-window.onload = function() {
-    if (window.location.pathname == '/host'){show_host_view();}
-};
-
-
 $(document).ready(function(){
+    console.log("document actually ready");
     namespace = '/ws'; // change to an empty string to use the global namespace
     // the socket.io documentation recommends sending an explicit package upon connection
     // this is specially important when using the global namespace
@@ -95,23 +94,23 @@ $(document).ready(function(){
         // Show the 'Start Game' button when enough players
     });
 
-    socket.on('server_state', function(msg) {
-        console.log(msg);
-        if (msg['data'].host = true){
-            show_table();
-        } else {
-            show_waiting_for_host();
-        }
-    });
-
     socket.on('no_host', function(event) {
         // Show 'Please wait for the game to be hosted' message
-        hide_table();
+        document.cookie = 'username=; path=/; domain='+document.domain+'; expires=' + new Date(0).toUTCString();
     });
 
     socket.on('czar_chosen', function(event){
        // When server says czar is chosen, show this on the clients.
         get_czar();
+    });
+
+    $("#submit_white_card_button").click(function(){
+        // need to handle case where white_card_id isn't set on load.
+        socket.emit("user_submit_white_card",
+                   { user_id: user_id,
+                     user: user,
+                     submitted_white_card_id: white_card_id
+                   });
     });
 
 });

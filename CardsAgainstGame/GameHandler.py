@@ -5,6 +5,7 @@ from CardsAgainstGame import CAHPlayer, Card
 
 SUBMISSION_STATE = object() # Everyone is submitting cards
 JUDGING_STATE = object() # Everyone is waiting for judging to happen
+TESTING = True
 
 
 class CardHandler():
@@ -16,6 +17,7 @@ class CardHandler():
         self.discarded_white_cards = []
         self.discarded_black_cards = []
         self.judged_cards = []
+        self.current_black_card = None
 
     def create_deck(self, card_type, expansions=None):
         """
@@ -57,7 +59,7 @@ class CardHandler():
         assert player.hand_size == 10
         return
 
-    def draw_black_card(self, czar):
+    def draw_black_card(self):
         """
         For the card czar specified, draw 1 fresh black cards.
         :param player:
@@ -66,9 +68,7 @@ class CardHandler():
         cards_to_draw = 1
         if len(self.black_deck) < cards_to_draw:
             self.shuffle_discards_into_black_deck()
-        czar.hand.add(self.black_deck.pop())
-        assert czar.hand_size == 1
-        return
+        return self.black_deck.pop()
 
     def discard(self, card=None):
         """
@@ -109,6 +109,7 @@ class Game():
         self.submission_count = 0
         self.time_to_judge_cards = 60
         self.time_to_pick_cards = 60
+        self.current_black_card = None
 
         # Turn state handlers
         self.turn_state = None
@@ -121,8 +122,8 @@ class Game():
         self.players.append(player)
         return
 
-    def remove_player(self, player_name=None):
-        quitter = self.get_player_by_name(player_name)
+    def remove_player(self, player=None):
+        quitter = self.get_player_by_name(player.name)
         for card in quitter.hand:
             self.cards.discard(card)
         quitter.awesome_points = 0
@@ -135,7 +136,7 @@ class Game():
         Return player from game's player list via player's name.
         :type players: CAHPlayer
         """
-        player = [player for player in self.players if player_name in player.name]
+        player = [player for player in self.players if player.name in player_name]
         if not player:
             return None
         return player[0]
@@ -153,6 +154,14 @@ class Game():
             name = player.name
             names.append(name)
         return names
+
+    def submit_white_card(self, player, submitted_white_card_id):
+        self.cards.judged_cards.append(self.cards.get_card_by_id(submitted_white_card_id))
+        for hand_card in player.hand.copy():
+            if hand_card.card_id == submitted_white_card_id:
+                player.hand.remove(hand_card)
+        player.submitted = True
+        return
 
     def new_game(self):
         """
@@ -181,6 +190,7 @@ class Game():
         player_count = len(self.players)
         while not self.card_czar and player_count >= 0:
             potential_czar = self.players[player_count-1]
+            print(potential_czar.was_czar)
             if potential_czar.was_czar == 0:
                 self.card_czar = potential_czar
                 potential_czar.was_czar = 1
@@ -197,18 +207,33 @@ class Game():
         return self.card_czar
 
     def update(self):
-        # print("Update Called")
+        #print("Update Called")
         if self.pre_game:
-            # print("PreGame Called")
             # Wait for Players
-            if len(self.players) > 2: # surely this means that games over 2 players are not possible??
+            if TESTING:
+                min_players = 1  # Due to cookie stuff, I need multiple browsers to test game. lowering min players=easier test
+            else:
+                min_players = 2
+
+            if len(self.players) > min_players: # surely this means that games over 2 players are not possible??
+                for player in self.players:
+                    if not player.connected:
+                        self.game_ready = False
+                        self.remove_player(player) # If we have found a non-connected player pregame, remove them
+                        return
+                self.game_ready = True
                 self.pre_game = False
-                # Game Starts
-                self.turn_state = SUBMISSION_STATE
+                # Now the app can broadcast game ready on socketio.
+
+        if not self.pre_game and self.game_ready and not self.turn_state:
+            # Game Starts
+            print('Game Starts')
+            self.turn_state = SUBMISSION_STATE
 
         if self.turn_state == SUBMISSION_STATE:
             if not self.card_czar:
                 self.card_czar = self.get_czar()
+            self.current_black_card = self.cards.draw_black_card()
 
             # Method to run until all players have submitted
             while self.submission_count != len(self.players) - 1: #TODO Add time countdown for submission in future feature

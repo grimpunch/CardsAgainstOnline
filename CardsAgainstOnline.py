@@ -3,7 +3,10 @@ from flask_interface.app import APP, socketio
 from ipgetter import myip
 import socket
 
-debug = True
+LANIP = None
+
+debug = True  # was this borken? Have added line below and log now shows exceptions, might be able to delete this
+APP.debug = True
 # Important note about Debug!
 #  If you run the server you will notice that the server is only accessible
 #  from your own computer, not from any other in the network.
@@ -19,18 +22,28 @@ def externaladdress(port):
     :param port:
     :return:
     """
-    LANIP = None
+    lan_ip_for_message = None
     interfaces = netifaces.interfaces()
-    for i in interfaces:
-        if i == 'lo':
-            continue
-        iface = netifaces.ifaddresses(i).get(netifaces.AF_INET)
-        if iface != None:
-            for j in iface:
-                LANIP = j['addr']
-    message = 'http://' + str(myip()) + ':' + str(port) + '/'
     if LANIP:
-        message += ' or ' + 'http://' + str(LANIP) + ':' + str(port) + '/'
+        lan_ip_for_message = LANIP
+    else:
+        for i in interfaces:
+            if i == 'lo':
+                continue
+            if 'docker' in i:
+                continue
+            iface = netifaces.ifaddresses(i).get(netifaces.AF_INET)
+            print (iface)
+            if iface is not None:
+                for j in iface:
+                    if not lan_ip_for_message:
+                        lan_ip_for_message = j['addr']
+                        global LANIP
+                        LANIP = j['addr']
+
+    message = 'http://' + str(myip()) + ':' + str(port) + '/'
+    if lan_ip_for_message:
+        message += ' or ' + 'http://' + str(lan_ip_for_message) + ':' + str(port) + '/'
     return message
 
 
@@ -38,7 +51,7 @@ def main():
     port = 8888
     APP.external_address = str(externaladdress(port))
     APP.game_thread.start()
-    socketio.run(APP, host='0.0.0.0', port=port)
+    socketio.run(APP, host=LANIP, port=port)
 
 if __name__ == '__main__':
     main()
