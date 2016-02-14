@@ -12,6 +12,8 @@ window.onload = function() {
             user_id = d1[0].id;
             pregame = d2[0].pregame;
         if (window.location.pathname != '/host') {
+            $('#judgement_header').hide();
+            $('#submit_judged_card_button').hide();
             $('.hand_area').load('/hand', function(data) {
                 var hand_banner = $('.hand_banner');
                 var slidey = hand_banner.unslider({
@@ -36,6 +38,8 @@ window.onload = function() {
         } else {
             host = true;
             $('#hand_header').hide();
+            $('#judgement_header').hide();
+            $('#submit_judged_card_button').hide();
             $("#submit_white_card_button").hide();
             $.get("/address", function (data) {
                     console.log(data);
@@ -72,6 +76,26 @@ function get_czar(){
     });
 }
 
+function set_judgement_screen() {
+    if (window.location.host == true) {
+        $.get("/judgement", function (data) {
+            var judgement_area = $('.judgement_area');
+            judgement_area.load('/judgement');
+        });
+        $('#submit_judged_card_button').hide();
+    }
+    else {
+        $('#submit_judged_card_button').hide();
+        $('#submit_white_card_button').hide();
+        $('#hand_header').hide();
+        $('#hand_area').hide();
+        $.get("/judgement", function (data) {
+            var judgement_area = $('.judgement_area');
+            judgement_area.load('/judgement');
+        });
+    }
+}
+
 $(document).ready(function(){
     console.log("document actually ready");
     namespace = '/ws'; // change to an empty string to use the global namespace
@@ -104,6 +128,16 @@ $(document).ready(function(){
         get_czar();
     });
 
+    socket.on('show_waiting_for_cards', function(event){
+       // Incomplete stub, requires showing a screen before all cards are submitted.
+    });
+
+    socket.on('show_judged_cards', function(event){
+         // Show the cards being judged by the czar
+            set_judgement_screen();
+        }
+    );
+
     $("#submit_white_card_button").click(function(){
         // need to handle case where white_card_id isn't set on load.
         socket.emit("user_submit_white_card",
@@ -111,6 +145,7 @@ $(document).ready(function(){
                      user: user,
                      submitted_white_card_id: white_card_id
                    });
+        set_judgement_screen();
     });
 
 });

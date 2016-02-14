@@ -102,7 +102,7 @@ def test_disconnect():
     if not APP.game:
         print('Removing Clients from non-active game server')
         disconnect()
-    print('Client disconnected')
+    # print('Client disconnected')
 # ##########################################
 
 STOP_EVENT = Event()
@@ -179,7 +179,7 @@ def user():
     username = request.cookies.get('username')
     uid = None
     if APP.game:
-        uid = APP.game.get_player_by_name(username).get_id()
+        uid = APP.game.get_player_by_name(username).player_id
         #a get socket.io between play and user
     return jsonify(id=uid, name=username)
 
@@ -253,11 +253,9 @@ def submit_white_card(data):
         player = APP.game.get_player_by_name(username)
         APP.game.submit_white_card(player, submitted_white_card_id)
         if APP.game.turn_state == JUDGING_STATE:
-            response = make_response(redirect('/judgement', code=302))
-            return response
+            emit('show_judged_cards')
         else:
-            # Returns just a placeholder for now.
-            return "OK", 200
+            emit('show_waiting_for_cards')
     else:
         return "Fucked up fam", 500
 

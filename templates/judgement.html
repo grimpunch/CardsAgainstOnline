@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html>
+{% for white_card in judgement_cards %}
+     <li class="judged_card"><div id="{{ white_card.card_id }}" class="white card game-screen-card">{{ white_card.text }}
+     </div></li>
+{% endfor %}
+</html>

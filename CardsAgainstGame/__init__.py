@@ -21,7 +21,8 @@ class CAHPlayer(object):
         self.was_czar = 0
         self.submitted = None
 
-    def get_id(self):
+    @property
+    def player_id(self):
         return self.id
 
     def play_card(self, card_to_play):
@@ -29,6 +30,10 @@ class CAHPlayer(object):
         self.submitted = card_to_play
         return (self.id, card_to_play)
 
+    def judge_card(self, card_chosen):
+        assert card_chosen == type(Card)
+        assert self.is_czar
+        return (self.id, card_chosen)
 
 class Card(object):
     """
@@ -50,7 +55,6 @@ class AICAHPlayer(CAHPlayer):
     def play_card(self, card_to_play):
         card = random.choice(self.hand)
         return card
-
 
     def judge_card(self, cards):
         return random.choice(cards)

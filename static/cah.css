@@ -216,6 +216,10 @@ html>body{
     display: inline-flex;
 }
 
+.judged_card {
+    display: inline-flex;
+}
+
 #current_czar_header {
     font-family: "Helvetica Neue", HelveticaNeue, TeXGyreHeros, FreeSans, "Nimbus Sans L", "Liberation Sans", Arimo, Helvetica, Arial, sans-serif;
     font-size: 20px;
