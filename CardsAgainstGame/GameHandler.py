@@ -2,13 +2,25 @@ import random
 import time
 from CardsAgainstGame.card_data import CardParser
 from CardsAgainstGame import CAHPlayer, Card
+from enum import Enum
 
-SUBMISSION_STATE = object() # Everyone is submitting cards
-JUDGING_STATE = object() # Everyone is waiting for judging to happen
+
+class TurnState(Enum):
+    Draw = 1  # The Czar draws the black card and starts the round
+    Submission = 2  # Everyone is submitting cards
+    Judging = 3  # Everyone is waiting for judging to happen
+    Results = 4  # Show results to users based on czars choice, then move to next turn
+
+
+class GameState(Enum):
+    WaitingForEnoughPlayers = 1  # Before a game host has selected to start the game,
+    Playing = 2  # players are playing the game
+    End = 3  # results are announced, current players are asked if they want to replay.
+
 TESTING = True
 
 
-class CardHandler():
+class CardHandler:
     def __init__(self):
         self.card_db = CardParser()
         self.black_deck = self.create_deck(card_type='Q')
@@ -62,8 +74,7 @@ class CardHandler():
     def draw_black_card(self):
         """
         For the card czar specified, draw 1 fresh black cards.
-        :param player:
-        :return:
+        :return: the black card
         """
         cards_to_draw = 1
         if len(self.black_deck) < cards_to_draw:
@@ -74,7 +85,6 @@ class CardHandler():
         """
         Appends a card being removed from a players hand to the discard pile
         :type card: Card
-        :return:
         """
         self.discarded_white_cards.append(card)
         return
@@ -93,11 +103,8 @@ class CardHandler():
         return self.all_cards.get(card_id)
 
 
-class Game():
+class Game:
     def __init__(self):
-        self.pre_game = True
-        self.game_ready = False
-        self.quitting = False
         self.host_connected = False
         self.cards = CardHandler()
         self.discards = self.cards.discarded_white_cards
@@ -110,9 +117,12 @@ class Game():
         self.time_to_judge_cards = 60
         self.time_to_pick_cards = 60
         self.current_black_card = None
+        self.quitting = False
 
-        # Turn state handlers
-        self.turn_state = None
+        # Game state handler
+        self.game_state = GameState.WaitingForEnoughPlayers
+        # Turn state handler
+        self.turn_state = TurnState.Draw
         print("Game Created")
 
     def add_player(self, player_name=None):
@@ -131,10 +141,9 @@ class Game():
         self.players.remove(quitter)
         return
 
-    def get_player_by_name(self, player_name=None):
+    def get_player_by_name(self, player_name=None) -> CAHPlayer:
         """
         Return player from game's player list via player's name.
-        :type players: CAHPlayer
         """
         player = [player for player in self.players if player.name in player_name]
         if not player:
@@ -144,7 +153,6 @@ class Game():
     def get_player_by_id(self, player_id=None):
         """
         Return player from game's player list via player's unique id.
-        :type players: CAHPlayer
         """
         return [player for player in self.players if player_id in player.get_id()][0]
 
@@ -154,6 +162,9 @@ class Game():
             name = player.name
             names.append(name)
         return names
+
+    def get_player_count(self):
+        return len(self.players)
 
     def submit_white_card(self, player, submitted_white_card_id):
         self.cards.judged_cards.append(self.cards.get_card_by_id(submitted_white_card_id))
@@ -206,44 +217,25 @@ class Game():
 
         return self.card_czar
 
-    def update(self):
-        #print("Update Called")
-        if self.pre_game:
-            # Wait for Players
-            if TESTING:
-                min_players = 1  # Due to cookie stuff, I need multiple browsers to test game. lowering min players=easier test
-            else:
-                min_players = 2
+    def update_endgame(self):
+        random.shuffle(self.black_deck)  # placeholder
 
-            if len(self.players) > min_players: # surely this means that games over 2 players are not possible??
-                for player in self.players:
-                    if not player.connected:
-                        self.game_ready = False
-                        self.remove_player(player) # If we have found a non-connected player pregame, remove them
-                        return
-                self.game_ready = True
-                self.pre_game = False
-                # Now the app can broadcast game ready on socketio.
-
-        if not self.pre_game and self.game_ready and not self.turn_state:
-            # Game Starts
-            print('Game Starts')
-            self.turn_state = SUBMISSION_STATE
-
-        if self.turn_state == SUBMISSION_STATE:
+    def update_turn(self):
+        #  game indivual turn update
+        if self.turn_state == TurnState.Submission:
             if not self.card_czar:
                 self.card_czar = self.get_czar()
             self.current_black_card = self.cards.draw_black_card()
 
             # Method to run until all players have submitted
-            while self.submission_count != len(self.players) - 1: #TODO Add time countdown for submission in future feature
+            while self.submission_count != len(self.players) - 1: #  TODO Add time countdown for submission in future feature
                 self.submission_count = 0
                 for player in self.players:
                     if player.submitted:
                         self.submission_count += 1
-            self.turn_state = JUDGING_STATE
+            self.turn_state = TurnState.Judging
 
-        elif self.turn_state == JUDGING_STATE:
+        elif self.turn_state == TurnState.Judging:
             # do stuff after cards are being picked by czar
             # reset all submitted states to zero
             for player in self.players:
@@ -252,6 +244,38 @@ class Game():
             while not self.card_czar.submitted:
                 time.sleep(1)
             self.card_czar = None
+
+    def update_waiting_for_players(self):
+        # Wait for Players
+        if TESTING:
+            min_players = 1  # I need multiple browsers to test game. lowering min players = easier test
+        else:
+            min_players = 2
+
+        if len(self.players) > min_players:
+            for player in self.players:
+                if not player.connected:
+                    self.game_state = GameState.WaitingForEnoughPlayers
+                    self.remove_player(player)
+                    return
+                if self.game_state != GameState.WaitingForEnoughPlayers:
+                    print('Game Starts')
+                    self.game_state = GameState.Playing
+                    # Now the app can broadcast game ready on socketio.
+
+    def update_game(self):
+        #  game macro level update
+        if self.game_state == GameState.End:
+            # wait / ask players if they want to restart
+            self.update_endgame()
+
+        if self.game_state == GameState.Playing:
+            # Game Starts
+            self.update_turn()
+
+        if self.game_state == GameState.WaitingForEnoughPlayers:
+            self.update_waiting_for_players()
+
         if self.quitting:
             return
         return

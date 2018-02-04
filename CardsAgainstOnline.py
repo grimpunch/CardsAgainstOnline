@@ -1,12 +1,12 @@
 import netifaces
-from flask_interface.app import APP, socketio
+from flask_interface.app import CAH_lobby_server, socketio
 from ipgetter import myip
 import socket
 
 LANIP = None
 
 debug = True  # was this borken? Have added line below and log now shows exceptions, might be able to delete this
-APP.debug = True
+CAH_lobby_server.debug = True
 # Important note about Debug!
 #  If you run the server you will notice that the server is only accessible
 #  from your own computer, not from any other in the network.
@@ -24,6 +24,7 @@ def externaladdress(port):
     """
     lan_ip_for_message = None
     interfaces = netifaces.interfaces()
+    global LANIP
     if LANIP:
         lan_ip_for_message = LANIP
     else:
@@ -38,7 +39,6 @@ def externaladdress(port):
                 for j in iface:
                     if not lan_ip_for_message:
                         lan_ip_for_message = j['addr']
-                        global LANIP
                         LANIP = j['addr']
 
     message = 'http://' + str(myip()) + ':' + str(port) + '/'
@@ -49,9 +49,9 @@ def externaladdress(port):
 
 def main():
     port = 8888
-    APP.external_address = str(externaladdress(port))
-    APP.game_thread.start()
-    socketio.run(APP, host=LANIP, port=port)
+    CAH_lobby_server.external_address = str(externaladdress(port))
+    CAH_lobby_server.game_thread.start()
+    socketio.run(CAH_lobby_server, host=LANIP, port=port)
 
 if __name__ == '__main__':
     main()

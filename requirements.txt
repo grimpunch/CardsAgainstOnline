@@ -17,4 +17,4 @@ six==1.9.0
 uuid==1.30
 Werkzeug==0.10.4
 wheel==0.24.0
-netifaces==0.10.4
+netifaces>=0.10.4

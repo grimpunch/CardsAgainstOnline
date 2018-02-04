@@ -1,6 +1,7 @@
 from CardsAgainstGame import GameHandler, Card, CAHPlayer, card_data
 import unittest
 
+
 class TestNewGame(unittest.TestCase):
     def setUp(self):
         self.game = GameHandler.Game()

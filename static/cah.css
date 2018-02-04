@@ -108,6 +108,10 @@ html>body{
 .game-screen-card{
     display: flex;
     margin: 10px;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
 }
 
 .game-screen-card-container {
