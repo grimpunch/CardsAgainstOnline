@@ -102,6 +102,9 @@ def client_connected(data):
         if not player:
             return
         player.connected = True
+        emit('player_connected',
+             {'username': player.get_name(),
+              'player_count': CAH_lobby_server.current_game.get_player_count()})
         return
 
 
@@ -163,7 +166,11 @@ def add_player():
     """
     if 'username' in request.form and CAH_lobby_server.current_game:
         username = request.form['username']
-        if username is not '' and username not in CAH_lobby_server.current_game.get_player_names():
+        if username == '' or len(username) == 0:
+            return 'Please enter a valid username'
+        elif username in CAH_lobby_server.current_game.get_player_names():
+            return 'Username' + username + 'has been taken already'
+        else:
             print(username + " joined")
             CAH_lobby_server.current_game.add_player(player_name=username)
             response = make_response(redirect('/play', code=302))
@@ -171,8 +178,6 @@ def add_player():
             response.set_cookie('username', username, expires=expires)
             response.set_cookie('session', CAH_lobby_server.session_key, expires=expires)
             return response
-        else:
-            return 'Please enter a valid username'
     else:
         return login()
 

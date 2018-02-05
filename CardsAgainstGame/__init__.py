@@ -24,6 +24,9 @@ class CAHPlayer(object):
     def get_id(self):
         return self.id
 
+    def get_name(self):
+        return self.name
+
     def play_card(self, card_to_play):
         assert card_to_play == type(Card)
         self.submitted = card_to_play

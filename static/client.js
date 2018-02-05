@@ -58,7 +58,7 @@ function get_current_player_count(){
 window.onload = function() {
     $.when( $.get('/user'), $.get('/lobby_state')).then(
         function(d1,d2) {
-            username = d1[0].name+d1[0].id;
+            username = d1[0].name;
             user_id = d1[0].id;
             lobby_state = d2[0].lobby_state;
         if (window.location.pathname != '/host') {
@@ -123,6 +123,13 @@ $(document).ready(function(){
                      }
         );
         return false;
+    });
+
+    socket.on('player_connected', function (data) {
+       // On player connected
+        console.log('username: '+ data['username']);
+        console.log('player_count: '+ data['player_count']);
+        get_current_player_count();
     });
 
     socket.on('game_ready', function(msg) {
