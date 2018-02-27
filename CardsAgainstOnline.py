@@ -1,4 +1,3 @@
-import netifaces
 from flask_interface.app import CAH_lobby_server, socketio
 from ipgetter import myip
 import socket
@@ -23,23 +22,12 @@ def externaladdress(port):
     :return:
     """
     lan_ip_for_message = None
-    interfaces = netifaces.interfaces()
     global LANIP
     if LANIP:
         lan_ip_for_message = LANIP
     else:
-        for i in interfaces:
-            if i == 'lo':
-                continue
-            if 'docker' in i:
-                continue
-            iface = netifaces.ifaddresses(i).get(netifaces.AF_INET)
-            print (iface)
-            if iface is not None:
-                for j in iface:
-                    if not lan_ip_for_message:
-                        lan_ip_for_message = j['addr']
-                        LANIP = j['addr']
+        lan_ip_for_message = LANIP = [(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close())
+                                      for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
 
     message = 'http://' + str(myip()) + ':' + str(port) + '/'
     if lan_ip_for_message:
@@ -50,7 +38,6 @@ def externaladdress(port):
 def main():
     port = 8888
     CAH_lobby_server.external_address = str(externaladdress(port))
-    CAH_lobby_server.game_thread.start()
     socketio.run(CAH_lobby_server, host=LANIP, port=port)
 
 if __name__ == '__main__':

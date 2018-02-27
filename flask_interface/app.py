@@ -12,7 +12,6 @@ from CardsAgainstGame.GameHandler import Game, TurnState, GameState
 from functools import wraps
 from flask_interface.utils import create_expiration_cookie_time
 from flask_socketio import SocketIO, emit, disconnect
-from threading import Thread, Event
 import time
 import json
 
@@ -21,7 +20,6 @@ class LobbyState(Enum):
     WaitingForHost = 1
     WaitingForGameCreation = 2
     InGame = 3
-
 
 CAH_lobby_server = Flask(__name__)
 CAH_lobby_server.template_folder = os.path.join(os.getcwd(), 'templates')
@@ -32,50 +30,6 @@ CAH_lobby_server.lobby_state = LobbyState
 CAH_lobby_server.current_game = None
 CAH_lobby_server.external_address = None
 socketio = SocketIO(CAH_lobby_server)
-
-
-class GameLoopThread(Thread):
-    def __init__(self, stop_event, interrupt_event):
-        self.stop_event = stop_event
-        self.interrupt_event = interrupt_event
-        Thread.__init__(self)
-
-    def run(self):
-        while not self.stop_event.is_set():
-            self.loop_process()
-            if self.interrupt_event.is_set():
-                self.log_interrupted_process()
-                self.interrupt_event.clear()
-
-    def loop_process(self):
-        if CAH_lobby_server.current_game:
-            CAH_lobby_server.current_game.update_game()
-        time.sleep(1)
-
-    def log_interrupted_process(self):
-        print("Interrupted Game Loop!")
-
-
-class WebsocketLoopThread(Thread):
-    def __init__(self, stop_event, interrupt_event):
-        self.stop_event = stop_event
-        self.interrupt_event = interrupt_event
-        self.count = 0
-        Thread.__init__(self)
-
-    def run(self):
-        while not self.stop_event.is_set():
-            self.loop_process()
-            if self.interrupt_event.is_set():
-                self.log_interrupted_process()
-                self.interrupt_event.clear()
-
-    def loop_process(self):
-        time.sleep(1)
-
-    def log_interrupted_process(self):
-        print("Interrupted!")
-
 
 # SocketIO Web-socket handling functionality.
 @socketio.on('my event', namespace='/ws')
@@ -102,9 +56,11 @@ def client_connected(data):
         if not player:
             return
         player.connected = True
+        print ('User %s connected: %d' % (player.get_name(), player.connected))
         emit('player_connected',
              {'username': player.get_name(),
-              'player_count': CAH_lobby_server.current_game.get_player_count()})
+              'player_count': CAH_lobby_server.current_game.get_player_count()},
+             broadcast=True)
         return
 
 
@@ -118,16 +74,12 @@ def test_disconnect():
 
 # ##########################################
 
-STOP_EVENT = Event()
-INTERRUPT_EVENT = Event()
-CAH_lobby_server.game_thread = GameLoopThread(STOP_EVENT, INTERRUPT_EVENT)
-CAH_lobby_server.websocket_thread = WebsocketLoopThread(STOP_EVENT, INTERRUPT_EVENT)
 CAH_lobby_server.lobby_state = LobbyState.WaitingForHost
 
 
-def login_required(func):
+def with_session(func):
     """
-    Redirects to login if username not known
+    Redirects to login if username not known or invalid session
     :param func:
     """
 
@@ -137,16 +89,24 @@ def login_required(func):
         Here's where the cookie crumbles
         """
         username_cookie = request.cookies.get('username')
-        is_valid_player = request.cookies.get('username') is not None
-        if not is_valid_player:
-            # str(request.cookies.get('session')) not in CAH_lobby_server.session_key:
+        is_valid_player = username_cookie is not None
+        session_cookie = request.cookies.get('session')
+        is_valid_session = session_cookie is not None
+        has_current_game = CAH_lobby_server.current_game is not None
+        if is_valid_player and is_valid_session and has_current_game:
+            return func(*args, **kwargs)
+        else:
+            if not is_valid_player:
+                print ('invalid player')
+            if not is_valid_session:
+                print ('invalid session id')
+            if not has_current_game:
+                print ('no valid game, player is stale?')
             response = make_response(redirect('/login'))
+            response.set_cookie('killswitch', '')
             response.set_cookie('session', '', expires=0)
             response.set_cookie('username', '', expires=0)
             return response
-        else:
-            return func(*args, **kwargs)
-
     return decorated
 
 
@@ -169,7 +129,7 @@ def add_player():
         if username == '' or len(username) == 0:
             return 'Please enter a valid username'
         elif username in CAH_lobby_server.current_game.get_player_names():
-            return 'Username' + username + 'has been taken already'
+            return 'Username "' + username + '" has been taken already'
         else:
             print(username + " joined")
             CAH_lobby_server.current_game.add_player(player_name=username)
@@ -192,7 +152,7 @@ def index():
 
 
 @CAH_lobby_server.route('/user')
-@login_required
+@with_session
 def user():
     """
     Api endpoint: return the user as a string
@@ -250,12 +210,13 @@ def player_count():
 
 
 @CAH_lobby_server.route('/hand')
-@login_required
+@with_session
 def hand():
     """
     Api endpoint: return the user's current hand
     """
     username = request.cookies.get('username')
+    print("getting hand for ", username)
     return render_template(
         "hand.html",
         hand=CAH_lobby_server.current_game.get_player_by_name(username).hand
@@ -263,7 +224,7 @@ def hand():
 
 
 @CAH_lobby_server.route('/judgement')
-@login_required
+@with_session
 def judgement():
     """
     Api endpoint: return the submitted white cards for judgement
@@ -276,7 +237,7 @@ def judgement():
 
 
 @socketio.on('user_submit_white_card', namespace='/ws')
-@login_required
+@with_session
 def submit_white_card(data):
     """
     Call submit white card, to remove card from players hand and add it to judge pile
@@ -312,6 +273,8 @@ def host():
 
         response = make_response(redirect('/host', code=302))
         response.set_cookie('username', 'HOST')
+        expires = create_expiration_cookie_time()
+        response.set_cookie('session', CAH_lobby_server.session_key, expires=expires)
         return response
     return render_template('game_screen.html')
 
@@ -322,7 +285,7 @@ def address():
 
 
 @CAH_lobby_server.route('/play')
-@login_required
+@with_session
 def play():
     """
     playing users go through this route
@@ -332,7 +295,6 @@ def play():
 
 @CAH_lobby_server.route("/interrupt")
 def interrupt():
-    INTERRUPT_EVENT.set()
     return "OK", 200
 
 
@@ -345,7 +307,5 @@ def shutdown_server():
 
 @CAH_lobby_server.route("/shutdown")
 def shutdown():
-    STOP_EVENT.set()
-    CAH_lobby_server.game_thread.join()
     shutdown_server()
     return "OK", 200
