@@ -9,6 +9,33 @@
     vertical-align : top;
 }
 
+.rotate-left {
+  transform: rotate(30deg) scale(0.8);
+  transition: 1s;
+  margin-left: 400px;
+  cursor: e-resize;
+  opacity: 0;
+  z-index: 10;
+}
+
+.rotate-right {
+  transform: rotate(-30deg) scale(0.8);
+  transition: 1s;
+  opacity: 0;
+  margin-left: -400px;
+  cursor: w-resize;
+  z-index: 10;
+}
+
+.submit-anim {
+  transform: translateY(-700px) scale(1.2);
+  transition: 1.4s;
+  opacity: 0;
+  margin-left: -400px;
+  cursor: w-resize;
+  z-index: 10;
+}
+
 .chat_area {
     float : right;
     border-style: solid;
@@ -68,7 +95,7 @@ html>body{
     -webkit-text-fill-color: #ffffff !important;
 }
 
-.main-bar {
+.cah-main-bar {
     background: #111111;
     top: 0;
     left: 0;
@@ -106,16 +133,19 @@ html>body{
 }
 
 .game-screen-card{
-    display: flex;
     margin: 10px;
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+/Edge */
-    user-select: none; /* Standard */
+    display: block;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    cursor: hand;
+    position: relative;
 }
 
 .game-screen-card-container {
     display: flex;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
 }
 
 .main-screen-card-container {
